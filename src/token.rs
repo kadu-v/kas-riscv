@@ -25,6 +25,7 @@ pub struct Token {
     pub kind: TokenKind,
 }
 
+// identが予約後の場合は対応するTokenKindを返す
 pub fn lookup_keyword(ident: &str) -> Option<TokenKind> {
     if let Some(kind) = KEYWORDS.get(ident) {
         return Some(kind.clone())
