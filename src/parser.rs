@@ -108,7 +108,6 @@ impl<'a> Parser<'a> {
 
         // 命令列の末端は改行文字 または EOF
         match &self.cur_tok.kind {
-            EOF => (),
             NewLine => self.next_token(),
             k => {
                 return Err(format!("expected \"\\n\" or \"\\r\", bot got {:?}", k))
