@@ -160,7 +160,7 @@ mod lexer_tests {
     #[test]
     fn test_peek_char() {
         let s = "lw 6, 10(5)";
-        let mut l = Lexer::new(s);
+        let l = Lexer::new(s);
 
         assert_eq!(l.ch as char, 'l');
         assert_eq!(l.peek_char().unwrap() as char, 'w');

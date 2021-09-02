@@ -1,4 +1,3 @@
-use std::fmt::format;
 use std::result::Result;
 
 use crate::lexer::*;
@@ -32,6 +31,8 @@ impl<'a> Parser<'a> {
     // 命令列のパース
     pub fn parse(&mut self) -> Result<Inst, String> {
         match &self.cur_tok.kind {
+            // 命令列の末尾を表す
+            EOF => Ok(Inst { ty : EOINST }),
             // I 形式の命令
             LW => self.parse_lw(),
             _ => Err("unsupported instruction!!".to_string())
@@ -105,8 +106,9 @@ impl<'a> Parser<'a> {
             }
         };
 
-        // 命令列の末端は改行文字
+        // 命令列の末端は改行文字 または EOF
         match &self.cur_tok.kind {
+            EOF => (),
             NewLine => self.next_token(),
             k => {
                 return Err(format!("expected \"\\n\" or \"\\r\", bot got {:?}", k))
