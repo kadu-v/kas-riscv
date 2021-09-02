@@ -1,5 +1,4 @@
 
-use std::path::Iter;
 
 
 use crate::token::*;
@@ -18,9 +17,9 @@ impl<'a> Lexer<'a> {
     // Lexer のコンストラクター
     pub fn new(input: &'a str) -> Self {
         let input = input.as_bytes();
-        let mut lex = Self { input : input, pos : 0, next_pos : 0, ch : 0 };
-        lex.read_char();
-        lex
+        let mut l = Self { input : input, pos : 0, next_pos : 0, ch : 0 };
+        l.read_char();
+        l
     }
 
     // 次のトークンを返すメソッド
@@ -145,64 +144,64 @@ impl<'a> Iterator for Lexer<'a> {
 
 
 #[cfg(test)]
-mod tests {
+mod lexer_tests {
     use crate::{lexer::Lexer, token::{ TokenKind, Token}};
 
     #[test]
     fn test_read_char() {
         let s = "lw 6, 10(5)";
-        let mut lex = Lexer::new(s);
+        let mut l = Lexer::new(s);
 
-        assert_eq!(lex.ch as char, 'l');
-        lex.read_char();
-        assert_eq!(lex.ch as char, 'w');
+        assert_eq!(l.ch as char, 'l');
+        l.read_char();
+        assert_eq!(l.ch as char, 'w');
     }
 
     #[test]
     fn test_peek_char() {
         let s = "lw 6, 10(5)";
-        let mut lex = Lexer::new(s);
+        let mut l = Lexer::new(s);
 
-        assert_eq!(lex.ch as char, 'l');
-        assert_eq!(lex.peek_char().unwrap() as char, 'w');
+        assert_eq!(l.ch as char, 'l');
+        assert_eq!(l.peek_char().unwrap() as char, 'w');
     }
 
     #[test]
     fn test_skip_whitespaces() {
         let s = "lw 6, 10(5)";
-        let mut lex = Lexer::new(s);
-        lex.read_char();
-        lex.read_char();
-        lex.skip_whitespaces();
-        assert_eq!(lex.ch as char, '6')
+        let mut l = Lexer::new(s);
+        l.read_char();
+        l.read_char();
+        l.skip_whitespaces();
+        assert_eq!(l.ch as char, '6')
     }
 
     #[test]
     fn test_read_identifier() {
         let s = "lw 6, 10(5)";
-        let mut lex = Lexer::new(s);
-        assert_eq!(lex.read_identifier(), b"lw");
+        let mut l = Lexer::new(s);
+        assert_eq!(l.read_identifier(), b"lw");
     }
 
     #[test]
     fn test_read_number() {
         let s = "6888, 10(5)";
-        let mut lex = Lexer::new(s);
-        assert_eq!(lex.read_number(), b"6888");
+        let mut l = Lexer::new(s);
+        assert_eq!(l.read_number(), b"6888");
     }
 
     #[test]
     fn test_next_token() {
         let s = "lw 6, 10(5)\n";
-        let mut lex = Lexer::new(s);
-        assert_eq!(lex.next_token(), Token { kind : TokenKind::LW });
-        assert_eq!(lex.next_token(), Token { kind : TokenKind::Number(6) });
-        assert_eq!(lex.next_token(), Token { kind : TokenKind::Comma });
-        assert_eq!(lex.next_token(), Token { kind : TokenKind::Number(10) });
-        assert_eq!(lex.next_token(), Token { kind : TokenKind::LParen });
-        assert_eq!(lex.next_token(), Token { kind : TokenKind::Number(5)});
-        assert_eq!(lex.next_token(), Token { kind : TokenKind::RParen });
-        assert_eq!(lex.next_token(), Token { kind : TokenKind::NewLine });
-        assert_eq!(lex.next_token(), Token { kind : TokenKind::EOF });
+        let mut l = Lexer::new(s);
+        assert_eq!(l.next_token(), Token { kind : TokenKind::LW });
+        assert_eq!(l.next_token(), Token { kind : TokenKind::Number(6) });
+        assert_eq!(l.next_token(), Token { kind : TokenKind::Comma });
+        assert_eq!(l.next_token(), Token { kind : TokenKind::Number(10) });
+        assert_eq!(l.next_token(), Token { kind : TokenKind::LParen });
+        assert_eq!(l.next_token(), Token { kind : TokenKind::Number(5)});
+        assert_eq!(l.next_token(), Token { kind : TokenKind::RParen });
+        assert_eq!(l.next_token(), Token { kind : TokenKind::NewLine });
+        assert_eq!(l.next_token(), Token { kind : TokenKind::EOF });
     }
 }

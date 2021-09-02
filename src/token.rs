@@ -2,7 +2,7 @@ use std::collections::HashMap;
 use once_cell::sync::Lazy;
 
 static KEYWORDS: Lazy<HashMap<&str, TokenKind>> = Lazy::new(|| {
-    [("lw", TokenKind::LW)].into_iter().cloned().collect::<HashMap<&str, TokenKind>>()
+    [("lw", TokenKind::LW)].iter().cloned().collect::<HashMap<&str, TokenKind>>()
 });
 
 #[derive(Debug, Clone, PartialEq, Eq)]
