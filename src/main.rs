@@ -7,12 +7,19 @@ use std::ffi::OsStr;
 use std::fs::*;
 use std::process;
 use std::path::Path;
-
+use std::env;
 
 use std::io::{BufReader, Read, Write};
 
 fn main() {
-    let input_file_path = Path::new("./add.kas");
+    let args = env::args().collect::<Vec<String>>();
+    if args.len() < 2 {
+        eprintln!("please input file !");
+        process::exit(1);
+    }
+
+
+    let input_file_path = Path::new(&args[1]);
     let output_file_path = match input_file_path.extension().and_then(OsStr::to_str) {
         Some("kas") => input_file_path.with_extension("hex"),
         _ => {
