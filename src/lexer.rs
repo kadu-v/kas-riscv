@@ -48,7 +48,7 @@ impl<'a> Lexer<'a> {
                     return tok;
                 } else if self.is_digit() {
                     let s = String::from_utf8(self.read_number().to_vec()).unwrap();
-                    let n = s.parse::<u16>().unwrap();
+                    let n = s.parse::<usize>().unwrap();
                     tok.kind = TokenKind::Number(n);
                     return tok;
                 } else {
@@ -191,7 +191,7 @@ mod lexer_tests {
     }
 
     #[test]
-    fn test_next_token() {
+    fn test_lexer_lw() {
         let s = "lw 6, 10(5)\n";
         let mut l = Lexer::new(s);
         assert_eq!(l.next_token(), Token { kind : TokenKind::LW });
@@ -200,6 +200,21 @@ mod lexer_tests {
         assert_eq!(l.next_token(), Token { kind : TokenKind::Number(10) });
         assert_eq!(l.next_token(), Token { kind : TokenKind::LParen });
         assert_eq!(l.next_token(), Token { kind : TokenKind::Number(5)});
+        assert_eq!(l.next_token(), Token { kind : TokenKind::RParen });
+        assert_eq!(l.next_token(), Token { kind : TokenKind::NewLine });
+        assert_eq!(l.next_token(), Token { kind : TokenKind::EOF });
+    }
+
+    #[test]
+    fn test_lexer_sw() {
+        let s = "sw 100, 12(0)\n";
+        let mut l = Lexer::new(s);
+        assert_eq!(l.next_token(), Token { kind : TokenKind::SW });
+        assert_eq!(l.next_token(), Token { kind : TokenKind::Number(100) });
+        assert_eq!(l.next_token(), Token { kind : TokenKind::Comma });
+        assert_eq!(l.next_token(), Token { kind : TokenKind::Number(12) });
+        assert_eq!(l.next_token(), Token { kind : TokenKind::LParen });
+        assert_eq!(l.next_token(), Token { kind : TokenKind::Number(0)});
         assert_eq!(l.next_token(), Token { kind : TokenKind::RParen });
         assert_eq!(l.next_token(), Token { kind : TokenKind::NewLine });
         assert_eq!(l.next_token(), Token { kind : TokenKind::EOF });

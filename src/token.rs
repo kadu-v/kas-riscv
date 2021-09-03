@@ -2,7 +2,13 @@ use std::collections::HashMap;
 use once_cell::sync::Lazy;
 
 static KEYWORDS: Lazy<HashMap<&str, TokenKind>> = Lazy::new(|| {
-    [("lw", TokenKind::LW)].iter().cloned().collect::<HashMap<&str, TokenKind>>()
+    [
+        ("lw", TokenKind::LW),
+        ("sw", TokenKind::SW),
+    ]
+    .iter()
+    .cloned()
+    .collect::<HashMap<&str, TokenKind>>()
 });
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -12,12 +18,13 @@ pub enum TokenKind {
     LParen, // "("
     RParen, // ")"
     Symbol(String), // "lw"
-    Number(u16),
+    Number(usize),
     EOF,
     ILEGAL,
 
     // オペコード
     LW,
+    SW,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]

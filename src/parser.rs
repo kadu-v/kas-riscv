@@ -35,86 +35,91 @@ impl<'a> Parser<'a> {
             EOF => Ok(Inst { ty : EOINST }),
             // I 形式の命令
             LW => self.parse_lw(),
+            // S形式の命令
+            SW => self.parse_sw(),
             _ => Err("unsupported instruction!!".to_string())
+        }
+    }
+    // cur_tokがkindと一致しているかチェックする
+    fn check_token_kind(&mut self, kind: TokenKind) -> Result<(), String> {
+        if self.cur_tok.kind != kind {
+            return Err(format!("expected {:?}, but got {:?}", kind, self.cur_tok.kind))
+        }
+        self.next_token();
+        Ok(())
+    }
+
+    // Number(x) トークンかをチェックし、数字を返す
+    fn check_number_token(&mut self) -> Result<usize, String> {
+        match self.cur_tok.kind {
+            Number(x) => {
+                self.next_token();
+                Ok(x)
+            },
+            _ => Err(format!("expected number, but got {:?}", self.cur_tok.kind))
         }
     }
 
     // lw命令をparseするメソッド
     fn parse_lw(&mut self) -> Result<Inst, String> {
-        let mut rd = 0;
-        let mut offset = 0;
-        let mut rs1 = 0;
 
         // 先頭はLWだとわかっているので、つぎのTokenに進める
         self.next_token();
 
         //　次のtokenはレジスタ番号を表す数字 "rd"
         // todo!("support symbol, zero, ra, ...");
-        match &self.cur_tok.kind {
-            Number(x) => { 
-                rd = *x as u8;
-                self.next_token();
-            },
-            k => { 
-                return Err(format!("expected number, but got {:?}", k)); 
-            }
-        };
+        let rd = self.check_number_token()?;
 
         // 次のtokenは Comma
-        match &self.cur_tok.kind {
-            Comma => self.next_token(),
-            k => {
-                return Err(format!("expected \",\", but got {:?}", k))
-            }
-        };
+        self.check_token_kind(Comma)?;
 
         // 次のtokenは Number(x)
-        match &self.cur_tok.kind {
-            Number(x) => {
-                offset = *x;
-                self.next_token();
-            }
-            k => {
-                return Err(format!("expected number, but got {:?}", k))
-            }
-        };
+        let offset = self.check_number_token()?;
 
         // 次のtokenは LParen
-        match &self.cur_tok.kind {
-            LParen => self.next_token(),
-            k => {
-                return Err(format!("expected \"(\", but got {:?}", k))
-            }
-        };
+        self.check_token_kind(LParen)?;
 
         //　次のtokenは Number(x)
-        match &self.cur_tok.kind {
-            Number(x) => {
-                rs1 = *x as u8;
-                self.next_token();
-            }
-            k => {
-                return Err(format!("expected number, but got {:?}", k))
-            }
-        };
+        let rs1 = self.check_number_token()?;
 
         // 次のtokenは RParen
-        match &self.cur_tok.kind {
-            RParen => self.next_token(),
-            k => {
-                return Err(format!("expected \")\", bot got {:?}", k))
-            }
-        };
+        self.check_token_kind(RParen)?;
 
-        // 命令列の末端は改行文字 または EOF
-        match &self.cur_tok.kind {
-            NewLine => self.next_token(),
-            k => {
-                return Err(format!("expected \"\\n\" or \"\\r\", bot got {:?}", k))
-            }
-        };
+        // 命令列の末端は改行文字
+        self.check_token_kind(NewLine)?;
 
         Ok(Inst { ty : I { imm: offset, rs1: rs1, funct3: 0b010, rd: rd, opcode: 0b0000011 }})
+    }
+
+    fn parse_sw(&mut self) -> Result<Inst, String> {
+        // 先頭はSWだとわかっているので、つぎのTokenに進める
+        self.next_token();
+
+        // 次のtokenは Number(x)
+        let rs2 = self.check_number_token()?;
+
+        // 次のtokenは Comma
+        self.check_token_kind(Comma)?;
+
+        // 次のtokenは Number(x)
+        let offset = self.check_number_token()?;
+
+        // 次のtokenは LParen
+        self.check_token_kind(LParen)?;
+
+        // 次のtokenは Number(x)
+        let rs1 = self.check_number_token()?;
+
+        // 次のtokenは RParen
+        self.check_token_kind(RParen)?;
+
+        // 命令列の最後は改行文字
+        self.check_token_kind(NewLine)?;
+
+        let imm_1 = offset >> 5;
+        let imm_2 = offset & 0b11111;
+
+        Ok(Inst { ty : S { imm_1: imm_1,  rs2: rs2, rs1: rs1, funct3: 0b010,  imm_2: imm_2, opcode: 0b0100011 }})
     }
 }
 
@@ -124,19 +129,29 @@ mod parser_tests {
     use crate::token::TokenKind::*;
     use crate::lexer::*;
     use crate::parser::*;
+    use crate::instructions::{Inst, InstType::*};
 
 
     #[test]
-    fn test_next_token() {
+    fn test_parser_lw() {
         let s: &str = "lw 6, 16(10)\n";
         let mut l = Lexer::new(s);
         let mut p = Parser::new(&mut l);
-        
-        assert_eq!(p.cur_tok.kind, LW);
-        assert_eq!(p.next_tok.kind, Number(6));
+        let inst = p.parse().unwrap().ty;
+        let expect = I { imm: 16, rs1: 10, funct3: 2, rd: 6, opcode: 3 };
 
-        p.next_token();
-        assert_eq!(p.cur_tok.kind, Number(6));
-        assert_eq!(p.next_tok.kind, Comma);
+        assert_eq!(inst, expect);
+    }
+
+
+    #[test]
+    fn test_parser_sw() {
+        let s: &str = "sw 6, 2357(0)\n";
+        let mut l = Lexer::new(s);
+        let mut p = Parser::new(&mut l);
+        let inst = p.parse().unwrap().ty;
+        let expect = S { imm_1: 73, rs2: 6, rs1: 0,  funct3: 2, imm_2: 21, opcode: 35 };
+
+        assert_eq!(inst, expect);
     }
 }

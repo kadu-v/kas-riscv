@@ -6,7 +6,10 @@ use crate::instructions::InstType::*;
 pub fn gen_bin(inst: &Inst) -> String {
     match inst.ty {
         EOINST => "".to_string(),
-        I { imm, rs1, funct3, rd, opcode } => format!("{:012b}{:05b}{:03b}{:05b}{:07b}", imm, rs1, funct3, rd, opcode),
+        I { imm, rs1, funct3, rd, opcode } 
+            => format!("{:012b}{:05b}{:03b}{:05b}{:07b}", imm, rs1, funct3, rd, opcode),
+        S { imm_1, rs2, rs1, funct3, imm_2, opcode } 
+            => format!("{:07b}{:05b}{:05b}{:03b}{:05b}{:07b}", imm_1, rs2, rs1, funct3, imm_2, opcode),
      }
 }
 
