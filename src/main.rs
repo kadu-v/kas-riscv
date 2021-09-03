@@ -1,13 +1,13 @@
+use kas_riscv::assembler::assemble_hex;
+use kas_riscv::code_gen::gen_hex;
 use kas_riscv::lexer::Lexer;
 use kas_riscv::parser::Parser;
-use kas_riscv::code_gen::gen_hex;
-use kas_riscv::assembler::assemble_hex;
 
+use std::env;
 use std::ffi::OsStr;
 use std::fs::*;
-use std::process;
 use std::path::Path;
-use std::env;
+use std::process;
 
 use std::io::{BufReader, Read, Write};
 
@@ -18,14 +18,13 @@ fn main() {
         process::exit(1);
     }
 
-
     let input_file_path = Path::new(&args[1]);
     let output_file_path = match input_file_path.extension().and_then(OsStr::to_str) {
         Some("kas") => input_file_path.with_extension("hex"),
         _ => {
             eprintln!("file extension is not *.kas !");
             process::exit(1);
-        } 
+        }
     };
 
     let input = match read_to_string(input_file_path) {
@@ -36,7 +35,7 @@ fn main() {
         }
     };
 
-    let output=   match assemble_hex(&input) {
+    let output = match assemble_hex(&input) {
         Ok(src) => src,
         Err(e) => {
             eprintln!("{}", e);
@@ -50,12 +49,10 @@ fn main() {
                 eprintln!("{}", e.to_string());
                 process::exit(1);
             }
-        },
+        }
         Err(e) => {
             eprintln!("{}", e);
             process::exit(1);
         }
     };
-
-
 }

@@ -1,16 +1,31 @@
-
-use crate::instructions::*;
 use crate::instructions::InstType::*;
-
+use crate::instructions::*;
 
 pub fn gen_bin(inst: &Inst) -> String {
     match inst.ty {
         EOINST => "".to_string(),
-        I { imm, rs1, funct3, rd, opcode } 
-            => format!("{:012b}{:05b}{:03b}{:05b}{:07b}", imm, rs1, funct3, rd, opcode),
-        S { imm_1, rs2, rs1, funct3, imm_2, opcode } 
-            => format!("{:07b}{:05b}{:05b}{:03b}{:05b}{:07b}", imm_1, rs2, rs1, funct3, imm_2, opcode),
-     }
+        I {
+            imm,
+            rs1,
+            funct3,
+            rd,
+            opcode,
+        } => format!(
+            "{:012b}{:05b}{:03b}{:05b}{:07b}",
+            imm, rs1, funct3, rd, opcode
+        ),
+        S {
+            imm_1,
+            rs2,
+            rs1,
+            funct3,
+            imm_2,
+            opcode,
+        } => format!(
+            "{:07b}{:05b}{:05b}{:03b}{:05b}{:07b}",
+            imm_1, rs2, rs1, funct3, imm_2, opcode
+        ),
+    }
 }
 
 pub fn gen_hex(inst: &Inst) -> String {
@@ -23,5 +38,8 @@ pub fn gen_hex(inst: &Inst) -> String {
     let c2 = u8::from_str_radix(&s[20..24], 2).unwrap();
     let c1 = u8::from_str_radix(&s[24..28], 2).unwrap();
     let c0 = u8::from_str_radix(&s[28..32], 2).unwrap();
-    format!("{:01x}{:01x}\n{:01x}{:01x}\n{:01x}{:01x}\n{:01x}{:01x}", c1, c0, c3, c2, c5, c4, c7, c6)
+    format!(
+        "{:01x}{:01x}\n{:01x}{:01x}\n{:01x}{:01x}\n{:01x}{:01x}",
+        c1, c0, c3, c2, c5, c4, c7, c6
+    )
 }

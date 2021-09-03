@@ -1,15 +1,11 @@
-
-
-
 use crate::token::*;
-
 
 #[derive(Debug, PartialEq, Eq)]
 pub struct Lexer<'a> {
-    input : &'a [u8],
-    pos : usize,
-    next_pos : usize,
-    ch : u8
+    input: &'a [u8],
+    pos: usize,
+    next_pos: usize,
+    ch: u8,
 }
 
 impl<'a> Lexer<'a> {
@@ -17,7 +13,12 @@ impl<'a> Lexer<'a> {
     // Lexer のコンストラクター
     pub fn new(input: &'a str) -> Self {
         let input = input.as_bytes();
-        let mut l = Self { input : input, pos : 0, next_pos : 0, ch : 0 };
+        let mut l = Self {
+            input: input,
+            pos: 0,
+            next_pos: 0,
+            ch: 0,
+        };
         l.read_char();
         l
     }
@@ -25,7 +26,9 @@ impl<'a> Lexer<'a> {
     // 次のトークンを返すメソッド
     // 現在の文字を検査して、次の文字をせっとしてから返す
     pub fn next_token(&mut self) -> Token {
-        let mut tok = Token { kind : TokenKind::EOF };
+        let mut tok = Token {
+            kind: TokenKind::EOF,
+        };
 
         // 空白を読み飛ばす
         self.skip_whitespaces();
@@ -55,7 +58,7 @@ impl<'a> Lexer<'a> {
                     tok.kind = TokenKind::ILEGAL
                 }
             }
-        } 
+        }
         self.read_char();
         tok
     }
@@ -81,7 +84,7 @@ impl<'a> Lexer<'a> {
         Some(self.input[self.next_pos])
     }
 
-    // 
+    //
 
     // 空白を読み飛ばす
     fn skip_whitespaces(&mut self) {
@@ -111,7 +114,7 @@ impl<'a> Lexer<'a> {
     }
 
     // 空白を判定するメソッド
-    fn is_whitespace(&self) -> bool { 
+    fn is_whitespace(&self) -> bool {
         self.ch as char == ' ' || self.ch as char == '\t'
     }
 
@@ -142,10 +145,12 @@ impl<'a> Iterator for Lexer<'a> {
     }
 }
 
-
 #[cfg(test)]
 mod lexer_tests {
-    use crate::{lexer::Lexer, token::{ TokenKind, Token}};
+    use crate::{
+        lexer::Lexer,
+        token::{Token, TokenKind},
+    };
 
     #[test]
     fn test_read_char() {
@@ -194,29 +199,119 @@ mod lexer_tests {
     fn test_lexer_lw() {
         let s = "lw 6, 10(5)\n";
         let mut l = Lexer::new(s);
-        assert_eq!(l.next_token(), Token { kind : TokenKind::LW });
-        assert_eq!(l.next_token(), Token { kind : TokenKind::Number(6) });
-        assert_eq!(l.next_token(), Token { kind : TokenKind::Comma });
-        assert_eq!(l.next_token(), Token { kind : TokenKind::Number(10) });
-        assert_eq!(l.next_token(), Token { kind : TokenKind::LParen });
-        assert_eq!(l.next_token(), Token { kind : TokenKind::Number(5)});
-        assert_eq!(l.next_token(), Token { kind : TokenKind::RParen });
-        assert_eq!(l.next_token(), Token { kind : TokenKind::NewLine });
-        assert_eq!(l.next_token(), Token { kind : TokenKind::EOF });
+        assert_eq!(
+            l.next_token(),
+            Token {
+                kind: TokenKind::LW
+            }
+        );
+        assert_eq!(
+            l.next_token(),
+            Token {
+                kind: TokenKind::Number(6)
+            }
+        );
+        assert_eq!(
+            l.next_token(),
+            Token {
+                kind: TokenKind::Comma
+            }
+        );
+        assert_eq!(
+            l.next_token(),
+            Token {
+                kind: TokenKind::Number(10)
+            }
+        );
+        assert_eq!(
+            l.next_token(),
+            Token {
+                kind: TokenKind::LParen
+            }
+        );
+        assert_eq!(
+            l.next_token(),
+            Token {
+                kind: TokenKind::Number(5)
+            }
+        );
+        assert_eq!(
+            l.next_token(),
+            Token {
+                kind: TokenKind::RParen
+            }
+        );
+        assert_eq!(
+            l.next_token(),
+            Token {
+                kind: TokenKind::NewLine
+            }
+        );
+        assert_eq!(
+            l.next_token(),
+            Token {
+                kind: TokenKind::EOF
+            }
+        );
     }
 
     #[test]
     fn test_lexer_sw() {
         let s = "sw 100, 12(0)\n";
         let mut l = Lexer::new(s);
-        assert_eq!(l.next_token(), Token { kind : TokenKind::SW });
-        assert_eq!(l.next_token(), Token { kind : TokenKind::Number(100) });
-        assert_eq!(l.next_token(), Token { kind : TokenKind::Comma });
-        assert_eq!(l.next_token(), Token { kind : TokenKind::Number(12) });
-        assert_eq!(l.next_token(), Token { kind : TokenKind::LParen });
-        assert_eq!(l.next_token(), Token { kind : TokenKind::Number(0)});
-        assert_eq!(l.next_token(), Token { kind : TokenKind::RParen });
-        assert_eq!(l.next_token(), Token { kind : TokenKind::NewLine });
-        assert_eq!(l.next_token(), Token { kind : TokenKind::EOF });
+        assert_eq!(
+            l.next_token(),
+            Token {
+                kind: TokenKind::SW
+            }
+        );
+        assert_eq!(
+            l.next_token(),
+            Token {
+                kind: TokenKind::Number(100)
+            }
+        );
+        assert_eq!(
+            l.next_token(),
+            Token {
+                kind: TokenKind::Comma
+            }
+        );
+        assert_eq!(
+            l.next_token(),
+            Token {
+                kind: TokenKind::Number(12)
+            }
+        );
+        assert_eq!(
+            l.next_token(),
+            Token {
+                kind: TokenKind::LParen
+            }
+        );
+        assert_eq!(
+            l.next_token(),
+            Token {
+                kind: TokenKind::Number(0)
+            }
+        );
+        assert_eq!(
+            l.next_token(),
+            Token {
+                kind: TokenKind::RParen
+            }
+        );
+        assert_eq!(
+            l.next_token(),
+            Token {
+                kind: TokenKind::NewLine
+            }
+        );
+        assert_eq!(
+            l.next_token(),
+            Token {
+                kind: TokenKind::EOF
+            }
+        );
     }
 }
