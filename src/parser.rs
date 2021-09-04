@@ -1,3 +1,4 @@
+use std::iter::Inspect;
 use std::result::Result;
 
 use crate::instructions::InstType::*;
@@ -37,13 +38,14 @@ impl<'a> Parser<'a> {
             // 命令列の末尾を表す
             EOF => Ok(Inst { ty: EOINST }),
             // I 形式の命令
-            LW => self.parse_lw(),
+            LW => self.parse_i_lw(),
+            ADDI => self.parse_i_addi(),
             // S形式の命令
-            SW => self.parse_sw(),
+            SW => self.parse_s_sw(),
             _ => Err("unsupported instruction!!".to_string()),
         }
     }
-    // cur_tokがkindと一致しているかチェックする
+    // cur_tok が kind と一致しているかチェックする
     fn check_token_kind(&mut self, kind: TokenKind) -> Result<(), String> {
         if self.cur_tok.kind != kind {
             return Err(format!(
@@ -67,12 +69,11 @@ impl<'a> Parser<'a> {
     }
 
     // lw命令をparseするメソッド
-    fn parse_lw(&mut self) -> Result<Inst, String> {
+    fn parse_i_lw(&mut self) -> Result<Inst, String> {
         // 先頭はLWだとわかっているので、つぎのTokenに進める
         self.next_token();
 
         //　次のtokenはレジスタ番号を表す数字 "rd"
-        // todo!("support symbol, zero, ra, ...");
         let rd = self.check_number_token()?;
 
         // 次のtokenは Comma
@@ -104,7 +105,7 @@ impl<'a> Parser<'a> {
         })
     }
 
-    fn parse_sw(&mut self) -> Result<Inst, String> {
+    fn parse_s_sw(&mut self) -> Result<Inst, String> {
         // 先頭はSWだとわかっているので、つぎのTokenに進める
         self.next_token();
 
@@ -143,6 +144,36 @@ impl<'a> Parser<'a> {
             },
         })
     }
+
+    fn parse_i_addi(&mut self) -> Result<Inst, String> {
+        // 先頭は ADDI だとわかっているので、次の token に進める
+        self.next_token();
+
+        // 次の token はNumber(x)
+        let rd = self.check_number_token()?;
+
+        // 次の token は Comma
+        self.check_token_kind(Comma)?;
+
+        // 次の token は Number(x)
+        let rs1 = self.check_number_token()?;
+
+        // 次の token は Comma
+        self.check_token_kind(Comma)?;
+
+        // 次の token は Number(x)
+        let imm = self.check_number_token()?;
+
+        Ok(Inst {
+            ty: I {
+                imm: imm,
+                rs1: rs1,
+                funct3: 0b000,
+                rd: rd,
+                opcode: 0b0010011,
+            },
+        })
+    }
 }
 
 #[cfg(test)]
@@ -153,7 +184,7 @@ mod parser_tests {
     use crate::token::TokenKind::*;
 
     #[test]
-    fn test_parser_lw() {
+    fn test_parser_i_lw() {
         let s: &str = "lw 6, 16(10)\n";
         let mut l = Lexer::new(s);
         let mut p = Parser::new(&mut l);
@@ -170,7 +201,7 @@ mod parser_tests {
     }
 
     #[test]
-    fn test_parser_sw() {
+    fn test_parser_s_sw() {
         let s: &str = "sw 6, 2357(0)\n";
         let mut l = Lexer::new(s);
         let mut p = Parser::new(&mut l);
@@ -182,6 +213,23 @@ mod parser_tests {
             funct3: 2,
             imm_2: 21,
             opcode: 35,
+        };
+
+        assert_eq!(inst, expect);
+    }
+
+    #[test]
+    fn test_parser_i_addi() {
+        let s: &str = "addi 6, 16, 10\n";
+        let mut l = Lexer::new(s);
+        let mut p = Parser::new(&mut l);
+        let inst = p.parse().unwrap().ty;
+        let expect = I {
+            imm: 10,
+            rs1: 16,
+            funct3: 000,
+            rd: 6,
+            opcode: 19,
         };
 
         assert_eq!(inst, expect);

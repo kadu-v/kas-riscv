@@ -196,7 +196,7 @@ mod lexer_tests {
     }
 
     #[test]
-    fn test_lexer_lw() {
+    fn test_lexer_i_lw() {
         let s = "lw 6, 10(5)\n";
         let mut l = Lexer::new(s);
         assert_eq!(
@@ -256,7 +256,7 @@ mod lexer_tests {
     }
 
     #[test]
-    fn test_lexer_sw() {
+    fn test_lexer_s_sw() {
         let s = "sw 100, 12(0)\n";
         let mut l = Lexer::new(s);
         assert_eq!(
@@ -299,6 +299,61 @@ mod lexer_tests {
             l.next_token(),
             Token {
                 kind: TokenKind::RParen
+            }
+        );
+        assert_eq!(
+            l.next_token(),
+            Token {
+                kind: TokenKind::NewLine
+            }
+        );
+        assert_eq!(
+            l.next_token(),
+            Token {
+                kind: TokenKind::EOF
+            }
+        );
+    }
+
+    #[test]
+    fn test_lexer_i_addi() {
+        let s = "addi 100, 101, 20\n";
+        let mut l = Lexer::new(s);
+        assert_eq!(
+            l.next_token(),
+            Token {
+                kind: TokenKind::ADDI
+            }
+        );
+        assert_eq!(
+            l.next_token(),
+            Token {
+                kind: TokenKind::Number(100)
+            }
+        );
+        assert_eq!(
+            l.next_token(),
+            Token {
+                kind: TokenKind::Comma
+            }
+        );
+        assert_eq!(
+            l.next_token(),
+            Token {
+                kind: TokenKind::Number(101)
+            }
+        );
+        assert_eq!(
+            l.next_token(),
+            Token {
+                kind: TokenKind::Comma
+            }
+        );
+
+        assert_eq!(
+            l.next_token(),
+            Token {
+                kind: TokenKind::Number(20)
             }
         );
         assert_eq!(
