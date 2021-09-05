@@ -43,6 +43,7 @@ impl<'a> Parser<'a> {
             SW => self.parse_s_sw(),
             // R形式の命令
             ADD => self.parse_r_add(),
+            SUB => self.parse_r_sub(),
             _ => Err("unsupported instruction!!".to_string()),
         }
     }
@@ -206,10 +207,44 @@ impl<'a> Parser<'a> {
 
         Ok(Inst {
             ty: R {
-                funct7: 0,
+                funct7: 0b0000000,
                 rs2: rs2,
                 rs1: rs1,
-                funct3: 0,
+                funct3: 0b000,
+                rd: rd,
+                opcode: 0b0110011,
+            },
+        })
+    }
+
+    fn parse_r_sub(&mut self) -> Result<Inst, String> {
+        // 先頭は ADD だとわかっているので、次の token をに進める
+        self.next_token();
+
+        // 次の token は Number(x)
+        let rd = self.check_number_token()?;
+
+        // 次の token は Comma
+        self.check_token_kind(Comma)?;
+
+        // 次の token は Number(x)
+        let rs1 = self.check_number_token()?;
+
+        // 次の token は Comma
+        self.check_token_kind(Comma)?;
+
+        // 次の token は Number(x)
+        let rs2 = self.check_number_token()?;
+
+        // 命令列の最後は改行文字
+        self.check_token_kind(NewLine)?;
+
+        Ok(Inst {
+            ty: R {
+                funct7: 0b0100000,
+                rs2: rs2,
+                rs1: rs1,
+                funct3: 0b000,
                 rd: rd,
                 opcode: 0b0110011,
             },
@@ -251,9 +286,9 @@ mod parser_tests {
             imm_1: 73,
             rs2: 6,
             rs1: 0,
-            funct3: 2,
+            funct3: 0b010,
             imm_2: 21,
-            opcode: 35,
+            opcode: 0b0100011,
         };
 
         assert_eq!(inst, expect);
@@ -268,9 +303,9 @@ mod parser_tests {
         let expect = I {
             imm: 10,
             rs1: 16,
-            funct3: 000,
+            funct3: 0b000,
             rd: 6,
-            opcode: 19,
+            opcode: 0b010011,
         };
 
         assert_eq!(inst, expect);
@@ -283,11 +318,29 @@ mod parser_tests {
         let mut p = Parser::new(&mut l);
         let inst = p.parse().unwrap().ty;
         let expect = R {
-            funct7: 0,
-            rs1: 10,
+            funct7: 0b0000000,
             rs2: 5,
-            funct3: 0,
+            rs1: 10,
+            funct3: 0b000,
             rd: 0,
+            opcode: 0b0110011,
+        };
+
+        assert_eq!(inst, expect);
+    }
+
+    #[test]
+    fn parse_r_sub() {
+        let s: &str = "sub 1, 11, 6\n";
+        let mut l = Lexer::new(s);
+        let mut p = Parser::new(&mut l);
+        let inst = p.parse().unwrap().ty;
+        let expect = R {
+            funct7: 0b0100000,
+            rs2: 6,
+            rs1: 11,
+            funct3: 0,
+            rd: 1,
             opcode: 0b0110011,
         };
 

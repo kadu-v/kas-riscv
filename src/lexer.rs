@@ -423,4 +423,59 @@ mod lexer_tests {
             }
         );
     }
+
+    #[test]
+    fn test_lexer_r_sub() {
+        let s = "sub 4, 11, 6\n";
+        let mut l = Lexer::new(s);
+        assert_eq!(
+            l.next_token(),
+            Token {
+                kind: TokenKind::SUB
+            }
+        );
+        assert_eq!(
+            l.next_token(),
+            Token {
+                kind: TokenKind::Number(4)
+            }
+        );
+        assert_eq!(
+            l.next_token(),
+            Token {
+                kind: TokenKind::Comma
+            }
+        );
+        assert_eq!(
+            l.next_token(),
+            Token {
+                kind: TokenKind::Number(11)
+            }
+        );
+        assert_eq!(
+            l.next_token(),
+            Token {
+                kind: TokenKind::Comma
+            }
+        );
+
+        assert_eq!(
+            l.next_token(),
+            Token {
+                kind: TokenKind::Number(6)
+            }
+        );
+        assert_eq!(
+            l.next_token(),
+            Token {
+                kind: TokenKind::NewLine
+            }
+        );
+        assert_eq!(
+            l.next_token(),
+            Token {
+                kind: TokenKind::EOF
+            }
+        );
+    }
 }
