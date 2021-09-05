@@ -369,4 +369,58 @@ mod lexer_tests {
             }
         );
     }
+    #[test]
+    fn test_lexer_r_add() {
+        let s = "add 32, 10, 5\n";
+        let mut l = Lexer::new(s);
+        assert_eq!(
+            l.next_token(),
+            Token {
+                kind: TokenKind::ADD
+            }
+        );
+        assert_eq!(
+            l.next_token(),
+            Token {
+                kind: TokenKind::Number(32)
+            }
+        );
+        assert_eq!(
+            l.next_token(),
+            Token {
+                kind: TokenKind::Comma
+            }
+        );
+        assert_eq!(
+            l.next_token(),
+            Token {
+                kind: TokenKind::Number(10)
+            }
+        );
+        assert_eq!(
+            l.next_token(),
+            Token {
+                kind: TokenKind::Comma
+            }
+        );
+
+        assert_eq!(
+            l.next_token(),
+            Token {
+                kind: TokenKind::Number(5)
+            }
+        );
+        assert_eq!(
+            l.next_token(),
+            Token {
+                kind: TokenKind::NewLine
+            }
+        );
+        assert_eq!(
+            l.next_token(),
+            Token {
+                kind: TokenKind::EOF
+            }
+        );
+    }
 }

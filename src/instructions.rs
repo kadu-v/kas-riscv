@@ -24,6 +24,18 @@ pub enum InstType {
         imm_2: usize,
         opcode: usize,
     },
+
+    // R形式の命令
+    // | 31 ----- 25 | 24 --- 20 | 19 --- 15 | 14 --- 12 | 11 --- 7 | 6 --- 0 |
+    //    funct7          rs2          rs1      funct3        rd       opcode
+    R {
+        funct7: usize,
+        rs2: usize,
+        rs1: usize,
+        funct3: usize,
+        rd: usize,
+        opcode: usize,
+    },
 }
 
 impl Display for InstType {
@@ -50,6 +62,16 @@ impl Display for InstType {
                 opcode,
             } => {
                 write!(f, "S {{ imm_1: {:#09b}, rs2: {:#07b}, rs1: {:#07b}, funct3: {:#05b}, imm_2: {:#07b}, opcode: {:#09b} }}", imm_1, rs2, rs1, funct3, imm_2, opcode)
+            }
+            Self::R {
+                funct7,
+                rs2,
+                rs1,
+                funct3,
+                rd,
+                opcode,
+            } => {
+                write!(f, "R {{ funct7: {:#09b}, rs2: {:#07b}, rs1: {:#07b}, funct3: {:#05b}, rd: {:#07b}, opcode: {:#09b} }}", funct7, rs2, rs1, funct3, rd, opcode)
             }
         }
     }

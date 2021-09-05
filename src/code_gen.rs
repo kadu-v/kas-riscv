@@ -25,6 +25,17 @@ pub fn gen_bin(inst: &Inst) -> String {
             "{:07b}{:05b}{:05b}{:03b}{:05b}{:07b}",
             imm_1, rs2, rs1, funct3, imm_2, opcode
         ),
+        R {
+            funct7,
+            rs2,
+            rs1,
+            funct3,
+            rd,
+            opcode,
+        } => format!(
+            "{:07b}{:05b}{:05b}{:04b}{:05b}{:07b}",
+            funct7, rs2, rs1, funct3, rd, opcode,
+        ),
     }
 }
 

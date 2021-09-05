@@ -6,6 +6,7 @@ static KEYWORDS: Lazy<HashMap<&str, TokenKind>> = Lazy::new(|| {
         ("lw", TokenKind::LW),
         ("sw", TokenKind::SW),
         ("addi", TokenKind::ADDI),
+        ("add", TokenKind::ADD),
     ]
     .iter()
     .cloned()
@@ -19,16 +20,21 @@ pub enum TokenKind {
     LParen,         // "("
     RParen,         // ")"
     Symbol(String), // "lw"
-    Number(usize),
+    Number(usize),  // 123...
     EOF,
     ILEGAL,
 
     // オペコード
     // I形式
-    LW,
-    ADDI,
+    LW,   // lw
+    ADDI, // addi
+
     // S形式
-    SW,
+    SW, // sw
+
+    // R形式
+    ADD, // add
+         // SUB, // sub
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -36,7 +42,7 @@ pub struct Token {
     pub kind: TokenKind,
 }
 
-// identが予約後の場合は対応するTokenKindを返す
+// ident が予約後の場合は対応する TokenKind を返す
 pub fn lookup_keyword(ident: &str) -> Option<TokenKind> {
     if let Some(kind) = KEYWORDS.get(ident) {
         return Some(kind.clone());

@@ -1,4 +1,3 @@
-use std::iter::Inspect;
 use std::result::Result;
 
 use crate::instructions::InstType::*;
@@ -42,6 +41,8 @@ impl<'a> Parser<'a> {
             ADDI => self.parse_i_addi(),
             // S形式の命令
             SW => self.parse_s_sw(),
+            // R形式の命令
+            ADD => self.parse_r_add(),
             _ => Err("unsupported instruction!!".to_string()),
         }
     }
@@ -105,6 +106,7 @@ impl<'a> Parser<'a> {
         })
     }
 
+    // sw 命令を parse するメソッド
     fn parse_s_sw(&mut self) -> Result<Inst, String> {
         // 先頭はSWだとわかっているので、つぎのTokenに進める
         self.next_token();
@@ -145,6 +147,7 @@ impl<'a> Parser<'a> {
         })
     }
 
+    // addi 命令を parse するメソッド
     fn parse_i_addi(&mut self) -> Result<Inst, String> {
         // 先頭は ADDI だとわかっているので、次の token に進める
         self.next_token();
@@ -164,6 +167,9 @@ impl<'a> Parser<'a> {
         // 次の token は Number(x)
         let imm = self.check_number_token()?;
 
+        // 命令列の最後は改行文字
+        self.check_token_kind(NewLine)?;
+
         Ok(Inst {
             ty: I {
                 imm: imm,
@@ -171,6 +177,41 @@ impl<'a> Parser<'a> {
                 funct3: 0b000,
                 rd: rd,
                 opcode: 0b0010011,
+            },
+        })
+    }
+
+    // add 命令を parse するメソッド
+    fn parse_r_add(&mut self) -> Result<Inst, String> {
+        // 先頭は ADD だとわかっているので、次の token をに進める
+        self.next_token();
+
+        // 次の token は Number(x)
+        let rd = self.check_number_token()?;
+
+        // 次の token は Comma
+        self.check_token_kind(Comma)?;
+
+        // 次の token は Number(x)
+        let rs1 = self.check_number_token()?;
+
+        // 次の token は Comma
+        self.check_token_kind(Comma)?;
+
+        // 次の token は Number(x)
+        let rs2 = self.check_number_token()?;
+
+        // 命令列の最後は改行文字
+        self.check_token_kind(NewLine)?;
+
+        Ok(Inst {
+            ty: R {
+                funct7: 0,
+                rs2: rs2,
+                rs1: rs1,
+                funct3: 0,
+                rd: rd,
+                opcode: 0b0110011,
             },
         })
     }
@@ -230,6 +271,24 @@ mod parser_tests {
             funct3: 000,
             rd: 6,
             opcode: 19,
+        };
+
+        assert_eq!(inst, expect);
+    }
+
+    #[test]
+    fn parse_r_add() {
+        let s: &str = "add 0, 10, 5\n";
+        let mut l = Lexer::new(s);
+        let mut p = Parser::new(&mut l);
+        let inst = p.parse().unwrap().ty;
+        let expect = R {
+            funct7: 0,
+            rs1: 10,
+            rs2: 5,
+            funct3: 0,
+            rd: 0,
+            opcode: 0b0110011,
         };
 
         assert_eq!(inst, expect);
