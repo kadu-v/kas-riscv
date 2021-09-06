@@ -44,6 +44,9 @@ impl<'a> Parser<'a> {
             // R形式の命令
             ADD => self.parse_r_add(),
             SUB => self.parse_r_sub(),
+            AND => self.parse_r_and(),
+            OR => self.parse_r_or(),
+            XOR => self.parse_r_xor(),
             _ => Err("unsupported instruction!!".to_string()),
         }
     }
@@ -70,7 +73,7 @@ impl<'a> Parser<'a> {
         }
     }
 
-    // lw命令をparseするメソッド
+    // lw 命令をparseするメソッド
     fn parse_i_lw(&mut self) -> Result<Inst, String> {
         // 先頭はLWだとわかっているので、つぎのTokenに進める
         self.next_token();
@@ -250,6 +253,108 @@ impl<'a> Parser<'a> {
             },
         })
     }
+
+    fn parse_r_and(&mut self) -> Result<Inst, String> {
+        // 先頭は AND だとわかっているので、次の token に進める
+        self.next_token();
+
+        // 次の token は Number(x)
+        let rd = self.check_number_token()?;
+
+        // 次の token は Comma
+        self.check_token_kind(Comma)?;
+
+        // 次の token は Number(x)
+        let rs1 = self.check_number_token()?;
+
+        // 次の token は Comma
+        self.check_token_kind(Comma)?;
+
+        // 次の token は Number(x)
+        let rs2 = self.check_number_token()?;
+
+        // 命令列の最後は改行文字
+        self.check_token_kind(NewLine)?;
+
+        Ok(Inst {
+            ty: R {
+                funct7: 0b0000000,
+                rs2: rs2,
+                rs1: rs1,
+                funct3: 0b111,
+                rd: rd,
+                opcode: 0b0110011,
+            },
+        })
+    }
+
+    fn parse_r_or(&mut self) -> Result<Inst, String> {
+        // 先頭は AND だとわかっているので、次の token に進める
+        self.next_token();
+
+        // 次の token は Number(x)
+        let rd = self.check_number_token()?;
+
+        // 次の token は Comma
+        self.check_token_kind(Comma)?;
+
+        // 次の token は Number(x)
+        let rs1 = self.check_number_token()?;
+
+        // 次の token は Comma
+        self.check_token_kind(Comma)?;
+
+        // 次の token は Number(x)
+        let rs2 = self.check_number_token()?;
+
+        // 命令列の最後は改行文字
+        self.check_token_kind(NewLine)?;
+
+        Ok(Inst {
+            ty: R {
+                funct7: 0b0000000,
+                rs2: rs2,
+                rs1: rs1,
+                funct3: 0b110,
+                rd: rd,
+                opcode: 0b0110011,
+            },
+        })
+    }
+
+    fn parse_r_xor(&mut self) -> Result<Inst, String> {
+        // 先頭は AND だとわかっているので、次の token に進める
+        self.next_token();
+
+        // 次の token は Number(x)
+        let rd = self.check_number_token()?;
+
+        // 次の token は Comma
+        self.check_token_kind(Comma)?;
+
+        // 次の token は Number(x)
+        let rs1 = self.check_number_token()?;
+
+        // 次の token は Comma
+        self.check_token_kind(Comma)?;
+
+        // 次の token は Number(x)
+        let rs2 = self.check_number_token()?;
+
+        // 命令列の最後は改行文字
+        self.check_token_kind(NewLine)?;
+
+        Ok(Inst {
+            ty: R {
+                funct7: 0b0000000,
+                rs2: rs2,
+                rs1: rs1,
+                funct3: 0b100,
+                rd: rd,
+                opcode: 0b0110011,
+            },
+        })
+    }
 }
 
 #[cfg(test)]
@@ -312,7 +417,7 @@ mod parser_tests {
     }
 
     #[test]
-    fn parse_r_add() {
+    fn test_parser_r_add() {
         let s: &str = "add 0, 10, 5\n";
         let mut l = Lexer::new(s);
         let mut p = Parser::new(&mut l);
@@ -330,7 +435,7 @@ mod parser_tests {
     }
 
     #[test]
-    fn parse_r_sub() {
+    fn test_parser_r_sub() {
         let s: &str = "sub 1, 11, 6\n";
         let mut l = Lexer::new(s);
         let mut p = Parser::new(&mut l);
@@ -341,6 +446,60 @@ mod parser_tests {
             rs1: 11,
             funct3: 0,
             rd: 1,
+            opcode: 0b0110011,
+        };
+
+        assert_eq!(inst, expect);
+    }
+
+    #[test]
+    fn test_parser_r_and() {
+        let s: &str = "and 31, 10, 1\n";
+        let mut l = Lexer::new(s);
+        let mut p = Parser::new(&mut l);
+        let inst = p.parse().unwrap().ty;
+        let expect = R {
+            funct7: 0b0000000,
+            rs2: 1,
+            rs1: 10,
+            funct3: 0b111,
+            rd: 31,
+            opcode: 0b0110011,
+        };
+
+        assert_eq!(inst, expect);
+    }
+
+    #[test]
+    fn test_parser_r_or() {
+        let s: &str = "or 0, 100, 521\n";
+        let mut l = Lexer::new(s);
+        let mut p = Parser::new(&mut l);
+        let inst = p.parse().unwrap().ty;
+        let expect = R {
+            funct7: 0b0000000,
+            rs2: 521,
+            rs1: 100,
+            funct3: 0b110,
+            rd: 0,
+            opcode: 0b0110011,
+        };
+
+        assert_eq!(inst, expect);
+    }
+
+    #[test]
+    fn test_parser_r_xor() {
+        let s: &str = "xor 24, 111, 666\n";
+        let mut l = Lexer::new(s);
+        let mut p = Parser::new(&mut l);
+        let inst = p.parse().unwrap().ty;
+        let expect = R {
+            funct7: 0b0000000,
+            rs2: 666,
+            rs1: 111,
+            funct3: 0b100,
+            rd: 24,
             opcode: 0b0110011,
         };
 

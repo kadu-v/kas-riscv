@@ -478,4 +478,332 @@ mod lexer_tests {
             }
         );
     }
+
+    #[test]
+    fn test_lexer_r_and() {
+        let s = "and 9, 0, 7\n";
+        let mut l = Lexer::new(s);
+        assert_eq!(
+            l.next_token(),
+            Token {
+                kind: TokenKind::AND
+            }
+        );
+        assert_eq!(
+            l.next_token(),
+            Token {
+                kind: TokenKind::Number(9)
+            }
+        );
+        assert_eq!(
+            l.next_token(),
+            Token {
+                kind: TokenKind::Comma
+            }
+        );
+        assert_eq!(
+            l.next_token(),
+            Token {
+                kind: TokenKind::Number(0)
+            }
+        );
+        assert_eq!(
+            l.next_token(),
+            Token {
+                kind: TokenKind::Comma
+            }
+        );
+
+        assert_eq!(
+            l.next_token(),
+            Token {
+                kind: TokenKind::Number(7)
+            }
+        );
+        assert_eq!(
+            l.next_token(),
+            Token {
+                kind: TokenKind::NewLine
+            }
+        );
+        assert_eq!(
+            l.next_token(),
+            Token {
+                kind: TokenKind::EOF
+            }
+        );
+    }
+
+    #[test]
+    fn test_lexer_r_or() {
+        let s = "or 31, 8, 100\n";
+        let mut l = Lexer::new(s);
+        assert_eq!(
+            l.next_token(),
+            Token {
+                kind: TokenKind::OR
+            }
+        );
+        assert_eq!(
+            l.next_token(),
+            Token {
+                kind: TokenKind::Number(31)
+            }
+        );
+        assert_eq!(
+            l.next_token(),
+            Token {
+                kind: TokenKind::Comma
+            }
+        );
+        assert_eq!(
+            l.next_token(),
+            Token {
+                kind: TokenKind::Number(8)
+            }
+        );
+        assert_eq!(
+            l.next_token(),
+            Token {
+                kind: TokenKind::Comma
+            }
+        );
+
+        assert_eq!(
+            l.next_token(),
+            Token {
+                kind: TokenKind::Number(100)
+            }
+        );
+        assert_eq!(
+            l.next_token(),
+            Token {
+                kind: TokenKind::NewLine
+            }
+        );
+        assert_eq!(
+            l.next_token(),
+            Token {
+                kind: TokenKind::EOF
+            }
+        );
+    }
+
+    #[test]
+    fn test_lexer_r_xor() {
+        let s = "xor 5, 121, 521\n";
+        let mut l = Lexer::new(s);
+        assert_eq!(
+            l.next_token(),
+            Token {
+                kind: TokenKind::XOR
+            }
+        );
+        assert_eq!(
+            l.next_token(),
+            Token {
+                kind: TokenKind::Number(5)
+            }
+        );
+        assert_eq!(
+            l.next_token(),
+            Token {
+                kind: TokenKind::Comma
+            }
+        );
+        assert_eq!(
+            l.next_token(),
+            Token {
+                kind: TokenKind::Number(121)
+            }
+        );
+        assert_eq!(
+            l.next_token(),
+            Token {
+                kind: TokenKind::Comma
+            }
+        );
+
+        assert_eq!(
+            l.next_token(),
+            Token {
+                kind: TokenKind::Number(521)
+            }
+        );
+        assert_eq!(
+            l.next_token(),
+            Token {
+                kind: TokenKind::NewLine
+            }
+        );
+        assert_eq!(
+            l.next_token(),
+            Token {
+                kind: TokenKind::EOF
+            }
+        );
+    }
+
+    #[test]
+    fn test_lexer_r_andi() {
+        let s = "andi 11, 123, 456\n";
+        let mut l = Lexer::new(s);
+        assert_eq!(
+            l.next_token(),
+            Token {
+                kind: TokenKind::ANDI
+            }
+        );
+        assert_eq!(
+            l.next_token(),
+            Token {
+                kind: TokenKind::Number(11)
+            }
+        );
+        assert_eq!(
+            l.next_token(),
+            Token {
+                kind: TokenKind::Comma
+            }
+        );
+        assert_eq!(
+            l.next_token(),
+            Token {
+                kind: TokenKind::Number(123)
+            }
+        );
+        assert_eq!(
+            l.next_token(),
+            Token {
+                kind: TokenKind::Comma
+            }
+        );
+
+        assert_eq!(
+            l.next_token(),
+            Token {
+                kind: TokenKind::Number(456)
+            }
+        );
+        assert_eq!(
+            l.next_token(),
+            Token {
+                kind: TokenKind::NewLine
+            }
+        );
+        assert_eq!(
+            l.next_token(),
+            Token {
+                kind: TokenKind::EOF
+            }
+        );
+    }
+    #[test]
+    fn test_lexer_r_ori() {
+        let s = "ori 7, 321, 5521\n";
+        let mut l = Lexer::new(s);
+        assert_eq!(
+            l.next_token(),
+            Token {
+                kind: TokenKind::ORI
+            }
+        );
+        assert_eq!(
+            l.next_token(),
+            Token {
+                kind: TokenKind::Number(7)
+            }
+        );
+        assert_eq!(
+            l.next_token(),
+            Token {
+                kind: TokenKind::Comma
+            }
+        );
+        assert_eq!(
+            l.next_token(),
+            Token {
+                kind: TokenKind::Number(321)
+            }
+        );
+        assert_eq!(
+            l.next_token(),
+            Token {
+                kind: TokenKind::Comma
+            }
+        );
+
+        assert_eq!(
+            l.next_token(),
+            Token {
+                kind: TokenKind::Number(5521)
+            }
+        );
+        assert_eq!(
+            l.next_token(),
+            Token {
+                kind: TokenKind::NewLine
+            }
+        );
+        assert_eq!(
+            l.next_token(),
+            Token {
+                kind: TokenKind::EOF
+            }
+        );
+    }
+    #[test]
+    fn test_lexer_r_xori() {
+        let s = "xori 5, 7, 13\n";
+        let mut l = Lexer::new(s);
+        assert_eq!(
+            l.next_token(),
+            Token {
+                kind: TokenKind::XORI
+            }
+        );
+        assert_eq!(
+            l.next_token(),
+            Token {
+                kind: TokenKind::Number(5)
+            }
+        );
+        assert_eq!(
+            l.next_token(),
+            Token {
+                kind: TokenKind::Comma
+            }
+        );
+        assert_eq!(
+            l.next_token(),
+            Token {
+                kind: TokenKind::Number(7)
+            }
+        );
+        assert_eq!(
+            l.next_token(),
+            Token {
+                kind: TokenKind::Comma
+            }
+        );
+
+        assert_eq!(
+            l.next_token(),
+            Token {
+                kind: TokenKind::Number(13)
+            }
+        );
+        assert_eq!(
+            l.next_token(),
+            Token {
+                kind: TokenKind::NewLine
+            }
+        );
+        assert_eq!(
+            l.next_token(),
+            Token {
+                kind: TokenKind::EOF
+            }
+        );
+    }
 }
