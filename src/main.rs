@@ -1,4 +1,4 @@
-use kas_riscv::assembler::assemble_hex;
+use kas_riscv::assembler::{assemble_bin, assemble_hex};
 use kas_riscv::code_gen::gen_hex;
 use kas_riscv::lexer::Lexer;
 use kas_riscv::parser::Parser;
@@ -35,7 +35,7 @@ fn main() {
         }
     };
 
-    let output = match assemble_hex(&input) {
+    let output = match assemble_bin(&input) {
         Ok(src) => src,
         Err(e) => {
             eprintln!("{}", e);
