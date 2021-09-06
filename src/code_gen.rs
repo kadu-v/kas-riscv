@@ -41,16 +41,20 @@ pub fn gen_bin(inst: &Inst) -> String {
 
 pub fn gen_hex(inst: &Inst) -> String {
     let s = gen_bin(&inst);
-    let c7 = u8::from_str_radix(&s[0..4], 2).unwrap();
-    let c6 = u8::from_str_radix(&s[4..8], 2).unwrap();
-    let c5 = u8::from_str_radix(&s[8..12], 2).unwrap();
-    let c4 = u8::from_str_radix(&s[12..16], 2).unwrap();
-    let c3 = u8::from_str_radix(&s[16..20], 2).unwrap();
-    let c2 = u8::from_str_radix(&s[20..24], 2).unwrap();
-    let c1 = u8::from_str_radix(&s[24..28], 2).unwrap();
-    let c0 = u8::from_str_radix(&s[28..32], 2).unwrap();
+    let mut cs = [0, 0, 0, 0, 0, 0, 0, 0];
+    cs[7] = u8::from_str_radix(&s[0..4], 2).unwrap();
+    cs[6] = u8::from_str_radix(&s[4..8], 2).unwrap();
+    cs[5] = u8::from_str_radix(&s[8..12], 2).unwrap();
+    cs[4] = u8::from_str_radix(&s[12..16], 2).unwrap();
+    cs[3] = u8::from_str_radix(&s[16..20], 2).unwrap();
+    cs[2] = u8::from_str_radix(&s[20..24], 2).unwrap();
+    cs[1] = u8::from_str_radix(&s[24..28], 2).unwrap();
+    cs[0] = u8::from_str_radix(&s[28..32], 2).unwrap();
+    for (i, c) in cs.iter().enumerate() {
+        println!("{}: {}", i, c);
+    }
     format!(
-        "{:01x}{:01x}\n{:01x}{:01x}\n{:01x}{:01x}\n{:01x}{:01x}",
-        c1, c0, c3, c2, c5, c4, c7, c6
+        "{:01x}{:01x}\n{:01x}{:01x}\n{:01x}{:01x}\n{:01x}{:01x}\n",
+        cs[1], cs[0], cs[3], cs[2], cs[5], cs[4], cs[7], cs[6]
     )
 }

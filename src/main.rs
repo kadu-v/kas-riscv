@@ -35,13 +35,14 @@ fn main() {
         }
     };
 
-    let output = match assemble_bin(&input) {
+    let output = match assemble_hex(&input) {
         Ok(src) => src,
         Err(e) => {
             eprintln!("{}", e);
             process::exit(1);
         }
     };
+    println!("{}", output);
 
     match File::create(output_file_path) {
         Ok(mut output_file) => {
