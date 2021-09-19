@@ -27,7 +27,7 @@ pub enum TokenKind {
     LParen,         // "("
     RParen,         // ")"
     Symbol(String), // "lw"
-    Number(usize),  // 123...
+    Number(isize),  // 123...
     EOF,
     ILEGAL,
 

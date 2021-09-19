@@ -41,18 +41,19 @@ impl<'a> Lexer<'a> {
             b')' => tok.kind = TokenKind::RParen,
             Self::EOF_CONST => tok.kind = TokenKind::EOF,
             _ => {
-                if self.is_letter() {
+                if self.is_digit() || self.is_minus_lit() {
+                    let s = String::from_utf8(self.read_number().to_vec()).unwrap();
+                    println!("{}", "xxxxxxxxxxxxxxx");
+                    let n = s.parse::<isize>().unwrap();
+                    tok.kind = TokenKind::Number(n);
+                    return tok;
+                } else if self.is_letter() {
                     let ident = String::from_utf8(self.read_identifier().to_vec()).unwrap();
                     if let Some(kind) = lookup_keyword(&ident) {
                         tok.kind = kind;
                     } else {
                         tok.kind = TokenKind::Symbol(ident);
                     }
-                    return tok;
-                } else if self.is_digit() {
-                    let s = String::from_utf8(self.read_number().to_vec()).unwrap();
-                    let n = s.parse::<usize>().unwrap();
-                    tok.kind = TokenKind::Number(n);
                     return tok;
                 } else {
                     tok.kind = TokenKind::ILEGAL
@@ -104,8 +105,14 @@ impl<'a> Lexer<'a> {
     }
 
     // 数字を読み取るメソッド
-    fn read_number(&mut self) -> &[u8] {
+    // 負の数字にも対応
+    pub fn read_number(&mut self) -> &[u8] {
         let pos = self.pos;
+        // 先頭が '-' の時は一文字読み飛ばす
+        if self.is_minus_lit() {
+            self.read_char();
+        }
+
         while self.is_digit() {
             self.read_char()
         }
@@ -131,6 +138,11 @@ impl<'a> Lexer<'a> {
     // 数字を判定するメソッド
     fn is_digit(&self) -> bool {
         b'0' <= self.ch && self.ch <= b'9'
+    }
+
+    // '-' を判定するメソッド
+    fn is_minus_lit(&mut self) -> bool {
+        self.ch == b'-'
     }
 }
 
@@ -189,10 +201,17 @@ mod lexer_tests {
     }
 
     #[test]
-    fn test_read_number() {
+    fn test_read_number1() {
         let s = "6888, 10(5)";
         let mut l = Lexer::new(s);
         assert_eq!(l.read_number(), b"6888");
+    }
+
+    #[test]
+    fn test_read_number2() {
+        let s = "-8";
+        let mut l = Lexer::new(s);
+        assert_eq!(l.read_number(), b"-8");
     }
 
     #[test]
