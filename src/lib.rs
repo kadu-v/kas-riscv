@@ -1,3 +1,4 @@
+pub mod asm;
 pub mod assembler;
 pub mod code_gen;
 pub mod instructions;

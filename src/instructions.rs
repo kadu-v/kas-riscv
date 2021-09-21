@@ -7,34 +7,34 @@ pub enum InstType {
     // | 31 ----------------- 20 | 19 --- 15 | 14 --- 12 | 11 --- 7 | 6 --- 0 |
     //       imm[11:0]                rs1        funct3        rd      opcode
     I {
-        imm: usize,
-        rs1: usize,
-        funct3: usize,
-        rd: usize,
-        opcode: usize,
+        imm: isize,
+        rs1: isize,
+        funct3: isize,
+        rd: isize,
+        opcode: isize,
     },
     // S形式の命令
     // | 31 ----- 25 | 24 --- 20 | 19 --- 15 | 14 --- 12 | 11 --- 7 | 6 --- 0 |
     //    imm[11:5]       rs2         rs1        funct3    imm[4:0]   opcode
     S {
-        imm_1: usize,
-        rs2: usize,
-        rs1: usize,
-        funct3: usize,
-        imm_2: usize,
-        opcode: usize,
+        imm_1: isize,
+        rs2: isize,
+        rs1: isize,
+        funct3: isize,
+        imm_2: isize,
+        opcode: isize,
     },
 
     // R形式の命令
     // | 31 ----- 25 | 24 --- 20 | 19 --- 15 | 14 --- 12 | 11 --- 7 | 6 --- 0 |
     //    funct7          rs2          rs1      funct3        rd       opcode
     R {
-        funct7: usize,
-        rs2: usize,
-        rs1: usize,
-        funct3: usize,
-        rd: usize,
-        opcode: usize,
+        funct7: isize,
+        rs2: isize,
+        rs1: isize,
+        funct3: isize,
+        rd: isize,
+        opcode: isize,
     },
 }
 

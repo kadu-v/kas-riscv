@@ -1,7 +1,7 @@
 use std::result::Result;
 
-use crate::instructions::InstType::*;
-use crate::instructions::*;
+use crate::asm::{Asm, AsmKind};
+
 use crate::lexer::*;
 use crate::token::TokenKind::*;
 use crate::token::*;
@@ -32,21 +32,23 @@ impl<'a> Parser<'a> {
     }
 
     // 命令列のパース
-    pub fn parse(&mut self) -> Result<Inst, String> {
+    pub fn parse(&mut self) -> Result<Asm, String> {
         match &self.cur_tok.kind {
             // 命令列の末尾を表す
-            EOF => Ok(Inst { ty: EOINST }),
+            EOF => Ok(Asm {
+                kind: AsmKind::EOASM,
+            }),
             // I 形式の命令
             LW => self.parse_i_lw(),
             ADDI => self.parse_i_addi(),
-            // S形式の命令
+            // // S形式の命令
             SW => self.parse_s_sw(),
-            // R形式の命令
-            ADD => self.parse_r_add(),
-            SUB => self.parse_r_sub(),
-            AND => self.parse_r_and(),
-            OR => self.parse_r_or(),
-            XOR => self.parse_r_xor(),
+            // // R形式の命令
+            // ADD => self.parse_r_add(),
+            // SUB => self.parse_r_sub(),
+            // AND => self.parse_r_and(),
+            // OR => self.parse_r_or(),
+            // XOR => self.parse_r_xor(),
             _ => Err("unsupported instruction!!".to_string()),
         }
     }
@@ -63,7 +65,7 @@ impl<'a> Parser<'a> {
     }
 
     // Number(x) トークンかをチェックし、数字を返す
-    fn check_number_token(&mut self) -> Result<usize, String> {
+    fn check_number_token(&mut self) -> Result<isize, String> {
         match self.cur_tok.kind {
             Number(x) => {
                 self.next_token();
@@ -74,7 +76,7 @@ impl<'a> Parser<'a> {
     }
 
     // lw 命令をparseするメソッド
-    fn parse_i_lw(&mut self) -> Result<Inst, String> {
+    fn parse_i_lw(&mut self) -> Result<Asm, String> {
         // 先頭はLWだとわかっているので、つぎのTokenに進める
         self.next_token();
 
@@ -85,7 +87,7 @@ impl<'a> Parser<'a> {
         self.check_token_kind(Comma)?;
 
         // 次のtokenは Number(x)
-        let offset = self.check_number_token()?;
+        let imm = self.check_number_token()?;
 
         // 次のtokenは LParen
         self.check_token_kind(LParen)?;
@@ -99,19 +101,13 @@ impl<'a> Parser<'a> {
         // 命令列の末端は改行文字
         self.check_token_kind(NewLine)?;
 
-        Ok(Inst {
-            ty: I {
-                imm: offset,
-                rs1: rs1,
-                funct3: 0b010,
-                rd: rd,
-                opcode: 0b0000011,
-            },
+        Ok(Asm {
+            kind: AsmKind::LW { imm, rs1, rd },
         })
     }
 
     // sw 命令を parse するメソッド
-    fn parse_s_sw(&mut self) -> Result<Inst, String> {
+    fn parse_s_sw(&mut self) -> Result<Asm, String> {
         // 先頭はSWだとわかっているので、つぎのTokenに進める
         self.next_token();
 
@@ -122,7 +118,7 @@ impl<'a> Parser<'a> {
         self.check_token_kind(Comma)?;
 
         // 次のtokenは Number(x)
-        let offset = self.check_number_token()?;
+        let imm = self.check_number_token()?;
 
         // 次のtokenは LParen
         self.check_token_kind(LParen)?;
@@ -136,23 +132,13 @@ impl<'a> Parser<'a> {
         // 命令列の最後は改行文字
         self.check_token_kind(NewLine)?;
 
-        let imm_1 = offset >> 5;
-        let imm_2 = offset & 0b11111;
-
-        Ok(Inst {
-            ty: S {
-                imm_1: imm_1,
-                rs2: rs2,
-                rs1: rs1,
-                funct3: 0b010,
-                imm_2: imm_2,
-                opcode: 0b0100011,
-            },
+        Ok(Asm {
+            kind: AsmKind::SW { imm, rs2, rs1 },
         })
     }
 
     // addi 命令を parse するメソッド
-    fn parse_i_addi(&mut self) -> Result<Inst, String> {
+    fn parse_i_addi(&mut self) -> Result<Asm, String> {
         // 先頭は ADDI だとわかっているので、次の token に進める
         self.next_token();
 
@@ -174,187 +160,181 @@ impl<'a> Parser<'a> {
         // 命令列の最後は改行文字
         self.check_token_kind(NewLine)?;
 
-        Ok(Inst {
-            ty: I {
-                imm: imm,
-                rs1: rs1,
-                funct3: 0b000,
-                rd: rd,
-                opcode: 0b0010011,
-            },
+        Ok(Asm {
+            kind: AsmKind::ADDI { imm, rs1, rd },
         })
     }
 
-    // add 命令を parse するメソッド
-    fn parse_r_add(&mut self) -> Result<Inst, String> {
-        // 先頭は ADD だとわかっているので、次の token をに進める
-        self.next_token();
+    // // add 命令を parse するメソッド
+    // fn parse_r_add(&mut self) -> Result<Inst, String> {
+    //     // 先頭は ADD だとわかっているので、次の token をに進める
+    //     self.next_token();
 
-        // 次の token は Number(x)
-        let rd = self.check_number_token()?;
+    //     // 次の token は Number(x)
+    //     let rd = self.check_number_token()?;
 
-        // 次の token は Comma
-        self.check_token_kind(Comma)?;
+    //     // 次の token は Comma
+    //     self.check_token_kind(Comma)?;
 
-        // 次の token は Number(x)
-        let rs1 = self.check_number_token()?;
+    //     // 次の token は Number(x)
+    //     let rs1 = self.check_number_token()?;
 
-        // 次の token は Comma
-        self.check_token_kind(Comma)?;
+    //     // 次の token は Comma
+    //     self.check_token_kind(Comma)?;
 
-        // 次の token は Number(x)
-        let rs2 = self.check_number_token()?;
+    //     // 次の token は Number(x)
+    //     let rs2 = self.check_number_token()?;
 
-        // 命令列の最後は改行文字
-        self.check_token_kind(NewLine)?;
+    //     // 命令列の最後は改行文字
+    //     self.check_token_kind(NewLine)?;
 
-        Ok(Inst {
-            ty: R {
-                funct7: 0b0000000,
-                rs2: rs2,
-                rs1: rs1,
-                funct3: 0b000,
-                rd: rd,
-                opcode: 0b0110011,
-            },
-        })
-    }
+    //     Ok(Inst {
+    //         ty: R {
+    //             funct7: 0b0000000,
+    //             rs2: rs2,
+    //             rs1: rs1,
+    //             funct3: 0b000,
+    //             rd: rd,
+    //             opcode: 0b0110011,
+    //         },
+    //     })
+    // }
 
-    fn parse_r_sub(&mut self) -> Result<Inst, String> {
-        // 先頭は ADD だとわかっているので、次の token をに進める
-        self.next_token();
+    // fn parse_r_sub(&mut self) -> Result<Inst, String> {
+    //     // 先頭は ADD だとわかっているので、次の token をに進める
+    //     self.next_token();
 
-        // 次の token は Number(x)
-        let rd = self.check_number_token()?;
+    //     // 次の token は Number(x)
+    //     let rd = self.check_number_token()?;
 
-        // 次の token は Comma
-        self.check_token_kind(Comma)?;
+    //     // 次の token は Comma
+    //     self.check_token_kind(Comma)?;
 
-        // 次の token は Number(x)
-        let rs1 = self.check_number_token()?;
+    //     // 次の token は Number(x)
+    //     let rs1 = self.check_number_token()?;
 
-        // 次の token は Comma
-        self.check_token_kind(Comma)?;
+    //     // 次の token は Comma
+    //     self.check_token_kind(Comma)?;
 
-        // 次の token は Number(x)
-        let rs2 = self.check_number_token()?;
+    //     // 次の token は Number(x)
+    //     let rs2 = self.check_number_token()?;
 
-        // 命令列の最後は改行文字
-        self.check_token_kind(NewLine)?;
+    //     // 命令列の最後は改行文字
+    //     self.check_token_kind(NewLine)?;
 
-        Ok(Inst {
-            ty: R {
-                funct7: 0b0100000,
-                rs2: rs2,
-                rs1: rs1,
-                funct3: 0b000,
-                rd: rd,
-                opcode: 0b0110011,
-            },
-        })
-    }
+    //     Ok(Inst {
+    //         ty: R {
+    //             funct7: 0b0100000,
+    //             rs2: rs2,
+    //             rs1: rs1,
+    //             funct3: 0b000,
+    //             rd: rd,
+    //             opcode: 0b0110011,
+    //         },
+    //     })
+    // }
 
-    fn parse_r_and(&mut self) -> Result<Inst, String> {
-        // 先頭は AND だとわかっているので、次の token に進める
-        self.next_token();
+    // fn parse_r_and(&mut self) -> Result<Inst, String> {
+    //     // 先頭は AND だとわかっているので、次の token に進める
+    //     self.next_token();
 
-        // 次の token は Number(x)
-        let rd = self.check_number_token()?;
+    //     // 次の token は Number(x)
+    //     let rd = self.check_number_token()?;
 
-        // 次の token は Comma
-        self.check_token_kind(Comma)?;
+    //     // 次の token は Comma
+    //     self.check_token_kind(Comma)?;
 
-        // 次の token は Number(x)
-        let rs1 = self.check_number_token()?;
+    //     // 次の token は Number(x)
+    //     let rs1 = self.check_number_token()?;
 
-        // 次の token は Comma
-        self.check_token_kind(Comma)?;
+    //     // 次の token は Comma
+    //     self.check_token_kind(Comma)?;
 
-        // 次の token は Number(x)
-        let rs2 = self.check_number_token()?;
+    //     // 次の token は Number(x)
+    //     let rs2 = self.check_number_token()?;
 
-        // 命令列の最後は改行文字
-        self.check_token_kind(NewLine)?;
+    //     // 命令列の最後は改行文字
+    //     self.check_token_kind(NewLine)?;
 
-        Ok(Inst {
-            ty: R {
-                funct7: 0b0000000,
-                rs2: rs2,
-                rs1: rs1,
-                funct3: 0b111,
-                rd: rd,
-                opcode: 0b0110011,
-            },
-        })
-    }
+    //     Ok(Inst {
+    //         ty: R {
+    //             funct7: 0b0000000,
+    //             rs2: rs2,
+    //             rs1: rs1,
+    //             funct3: 0b111,
+    //             rd: rd,
+    //             opcode: 0b0110011,
+    //         },
+    //     })
+    // }
 
-    fn parse_r_or(&mut self) -> Result<Inst, String> {
-        // 先頭は AND だとわかっているので、次の token に進める
-        self.next_token();
+    // fn parse_r_or(&mut self) -> Result<Inst, String> {
+    //     // 先頭は AND だとわかっているので、次の token に進める
+    //     self.next_token();
 
-        // 次の token は Number(x)
-        let rd = self.check_number_token()?;
+    //     // 次の token は Number(x)
+    //     let rd = self.check_number_token()?;
 
-        // 次の token は Comma
-        self.check_token_kind(Comma)?;
+    //     // 次の token は Comma
+    //     self.check_token_kind(Comma)?;
 
-        // 次の token は Number(x)
-        let rs1 = self.check_number_token()?;
+    //     // 次の token は Number(x)
+    //     let rs1 = self.check_number_token()?;
 
-        // 次の token は Comma
-        self.check_token_kind(Comma)?;
+    //     // 次の token は Comma
+    //     self.check_token_kind(Comma)?;
 
-        // 次の token は Number(x)
-        let rs2 = self.check_number_token()?;
+    //     // 次の token は Number(x)
+    //     let rs2 = self.check_number_token()?;
 
-        // 命令列の最後は改行文字
-        self.check_token_kind(NewLine)?;
+    //     // 命令列の最後は改行文字
+    //     self.check_token_kind(NewLine)?;
 
-        Ok(Inst {
-            ty: R {
-                funct7: 0b0000000,
-                rs2: rs2,
-                rs1: rs1,
-                funct3: 0b110,
-                rd: rd,
-                opcode: 0b0110011,
-            },
-        })
-    }
+    //     Ok(Inst {
+    //         ty: R {
+    //             funct7: 0b0000000,
+    //             rs2: rs2,
+    //             rs1: rs1,
+    //             funct3: 0b110,
+    //             rd: rd,
+    //             opcode: 0b0110011,
+    //         },
+    //     })
+    // }
 
-    fn parse_r_xor(&mut self) -> Result<Inst, String> {
-        // 先頭は AND だとわかっているので、次の token に進める
-        self.next_token();
+    // fn parse_r_xor(&mut self) -> Result<Inst, String> {
+    //     // 先頭は AND だとわかっているので、次の token に進める
+    //     self.next_token();
 
-        // 次の token は Number(x)
-        let rd = self.check_number_token()?;
+    //     // 次の token は Number(x)
+    //     let rd = self.check_number_token()?;
 
-        // 次の token は Comma
-        self.check_token_kind(Comma)?;
+    //     // 次の token は Comma
+    //     self.check_token_kind(Comma)?;
 
-        // 次の token は Number(x)
-        let rs1 = self.check_number_token()?;
+    //     // 次の token は Number(x)
+    //     let rs1 = self.check_number_token()?;
 
-        // 次の token は Comma
-        self.check_token_kind(Comma)?;
+    //     // 次の token は Comma
+    //     self.check_token_kind(Comma)?;
 
-        // 次の token は Number(x)
-        let rs2 = self.check_number_token()?;
+    //     // 次の token は Number(x)
+    //     let rs2 = self.check_number_token()?;
 
-        // 命令列の最後は改行文字
-        self.check_token_kind(NewLine)?;
+    //     // 命令列の最後は改行文字
+    //     self.check_token_kind(NewLine)?;
 
-        Ok(Inst {
-            ty: R {
-                funct7: 0b0000000,
-                rs2: rs2,
-                rs1: rs1,
-                funct3: 0b100,
-                rd: rd,
-                opcode: 0b0110011,
-            },
-        })
-    }
+    //     Ok(Inst {
+    //         ty: R {
+    //             funct7: 0b0000000,
+    //             rs2: rs2,
+    //             rs1: rs1,
+    //             funct3: 0b100,
+    //             rd: rd,
+    //             opcode: 0b0110011,
+    //         },
+    //     })
+    // }
 }
 
 #[cfg(test)]
@@ -364,39 +344,36 @@ mod parser_tests {
     use crate::parser::*;
     use crate::token::TokenKind::*;
 
+    // lw rd imm(rs1)
     #[test]
     fn test_parser_i_lw() {
         let s: &str = "lw 6, 16(10)\n";
         let mut l = Lexer::new(s);
         let mut p = Parser::new(&mut l);
-        let inst = p.parse().unwrap().ty;
-        let expect = I {
+        let asm_kind = p.parse().unwrap().kind;
+        let expect = AsmKind::LW {
             imm: 16,
             rs1: 10,
-            funct3: 2,
             rd: 6,
-            opcode: 3,
         };
 
-        assert_eq!(inst, expect);
+        assert_eq!(asm_kind, expect);
     }
 
+    // sw rs1 imm(rs2)
     #[test]
     fn test_parser_s_sw() {
         let s: &str = "sw 6, 2357(0)\n";
         let mut l = Lexer::new(s);
         let mut p = Parser::new(&mut l);
-        let inst = p.parse().unwrap().ty;
-        let expect = S {
-            imm_1: 73,
-            rs2: 6,
+        let asm_kind = p.parse().unwrap().kind;
+        let expect = AsmKind::SW {
+            imm: 2357,
             rs1: 0,
-            funct3: 0b010,
-            imm_2: 21,
-            opcode: 0b0100011,
+            rs2: 6,
         };
 
-        assert_eq!(inst, expect);
+        assert_eq!(asm_kind, expect);
     }
 
     #[test]
@@ -404,105 +381,103 @@ mod parser_tests {
         let s: &str = "addi 6, 16, 10\n";
         let mut l = Lexer::new(s);
         let mut p = Parser::new(&mut l);
-        let inst = p.parse().unwrap().ty;
-        let expect = I {
+        let asm_kind = p.parse().unwrap().kind;
+        let expect = AsmKind::ADDI {
             imm: 10,
             rs1: 16,
-            funct3: 0b000,
             rd: 6,
-            opcode: 0b010011,
         };
 
-        assert_eq!(inst, expect);
+        assert_eq!(asm_kind, expect);
     }
 
-    #[test]
-    fn test_parser_r_add() {
-        let s: &str = "add 0, 10, 5\n";
-        let mut l = Lexer::new(s);
-        let mut p = Parser::new(&mut l);
-        let inst = p.parse().unwrap().ty;
-        let expect = R {
-            funct7: 0b0000000,
-            rs2: 5,
-            rs1: 10,
-            funct3: 0b000,
-            rd: 0,
-            opcode: 0b0110011,
-        };
+    // #[test]
+    // fn test_parser_r_add() {
+    //     let s: &str = "add 0, 10, 5\n";
+    //     let mut l = Lexer::new(s);
+    //     let mut p = Parser::new(&mut l);
+    //     let inst = p.parse().unwrap().ty;
+    //     let expect = R {
+    //         funct7: 0b0000000,
+    //         rs2: 5,
+    //         rs1: 10,
+    //         funct3: 0b000,
+    //         rd: 0,
+    //         opcode: 0b0110011,
+    //     };
 
-        assert_eq!(inst, expect);
-    }
+    //     assert_eq!(inst, expect);
+    // }
 
-    #[test]
-    fn test_parser_r_sub() {
-        let s: &str = "sub 1, 11, 6\n";
-        let mut l = Lexer::new(s);
-        let mut p = Parser::new(&mut l);
-        let inst = p.parse().unwrap().ty;
-        let expect = R {
-            funct7: 0b0100000,
-            rs2: 6,
-            rs1: 11,
-            funct3: 0,
-            rd: 1,
-            opcode: 0b0110011,
-        };
+    // #[test]
+    // fn test_parser_r_sub() {
+    //     let s: &str = "sub 1, 11, 6\n";
+    //     let mut l = Lexer::new(s);
+    //     let mut p = Parser::new(&mut l);
+    //     let inst = p.parse().unwrap().ty;
+    //     let expect = R {
+    //         funct7: 0b0100000,
+    //         rs2: 6,
+    //         rs1: 11,
+    //         funct3: 0,
+    //         rd: 1,
+    //         opcode: 0b0110011,
+    //     };
 
-        assert_eq!(inst, expect);
-    }
+    //     assert_eq!(inst, expect);
+    // }
 
-    #[test]
-    fn test_parser_r_and() {
-        let s: &str = "and 31, 10, 1\n";
-        let mut l = Lexer::new(s);
-        let mut p = Parser::new(&mut l);
-        let inst = p.parse().unwrap().ty;
-        let expect = R {
-            funct7: 0b0000000,
-            rs2: 1,
-            rs1: 10,
-            funct3: 0b111,
-            rd: 31,
-            opcode: 0b0110011,
-        };
+    // #[test]
+    // fn test_parser_r_and() {
+    //     let s: &str = "and 31, 10, 1\n";
+    //     let mut l = Lexer::new(s);
+    //     let mut p = Parser::new(&mut l);
+    //     let inst = p.parse().unwrap().ty;
+    //     let expect = R {
+    //         funct7: 0b0000000,
+    //         rs2: 1,
+    //         rs1: 10,
+    //         funct3: 0b111,
+    //         rd: 31,
+    //         opcode: 0b0110011,
+    //     };
 
-        assert_eq!(inst, expect);
-    }
+    //     assert_eq!(inst, expect);
+    // }
 
-    #[test]
-    fn test_parser_r_or() {
-        let s: &str = "or 0, 100, 521\n";
-        let mut l = Lexer::new(s);
-        let mut p = Parser::new(&mut l);
-        let inst = p.parse().unwrap().ty;
-        let expect = R {
-            funct7: 0b0000000,
-            rs2: 521,
-            rs1: 100,
-            funct3: 0b110,
-            rd: 0,
-            opcode: 0b0110011,
-        };
+    // #[test]
+    // fn test_parser_r_or() {
+    //     let s: &str = "or 0, 100, 521\n";
+    //     let mut l = Lexer::new(s);
+    //     let mut p = Parser::new(&mut l);
+    //     let inst = p.parse().unwrap().ty;
+    //     let expect = R {
+    //         funct7: 0b0000000,
+    //         rs2: 521,
+    //         rs1: 100,
+    //         funct3: 0b110,
+    //         rd: 0,
+    //         opcode: 0b0110011,
+    //     };
 
-        assert_eq!(inst, expect);
-    }
+    //     assert_eq!(inst, expect);
+    // }
 
-    #[test]
-    fn test_parser_r_xor() {
-        let s: &str = "xor 24, 111, 666\n";
-        let mut l = Lexer::new(s);
-        let mut p = Parser::new(&mut l);
-        let inst = p.parse().unwrap().ty;
-        let expect = R {
-            funct7: 0b0000000,
-            rs2: 666,
-            rs1: 111,
-            funct3: 0b100,
-            rd: 24,
-            opcode: 0b0110011,
-        };
+    // #[test]
+    // fn test_parser_r_xor() {
+    //     let s: &str = "xor 24, 111, 666\n";
+    //     let mut l = Lexer::new(s);
+    //     let mut p = Parser::new(&mut l);
+    //     let inst = p.parse().unwrap().ty;
+    //     let expect = R {
+    //         funct7: 0b0000000,
+    //         rs2: 666,
+    //         rs1: 111,
+    //         funct3: 0b100,
+    //         rd: 24,
+    //         opcode: 0b0110011,
+    //     };
 
-        assert_eq!(inst, expect);
-    }
+    //     assert_eq!(inst, expect);
+    // }
 }

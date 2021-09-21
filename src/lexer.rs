@@ -43,7 +43,6 @@ impl<'a> Lexer<'a> {
             _ => {
                 if self.is_digit() || self.is_minus_lit() {
                     let s = String::from_utf8(self.read_number().to_vec()).unwrap();
-                    println!("{}", "xxxxxxxxxxxxxxx");
                     let n = s.parse::<isize>().unwrap();
                     tok.kind = TokenKind::Number(n);
                     return tok;
