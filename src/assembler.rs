@@ -54,6 +54,7 @@ impl<'a> Assembler<'a> {
                 rd: rd,
                 opcode: 0b0110011,
             },
+            EOASM => EOINST,
             x => return Err(format!("Assembler::assemble: {:?} is not implemnted", x)),
         };
 
@@ -69,7 +70,7 @@ impl<'a> Assembler<'a> {
                 Inst { ty: EOINST } => return Ok(src),
                 i => {
                     let b = gen_bin(&i);
-                    src = format!("{}{}", src, b);
+                    src = format!("{}{}\n", src, b);
                 }
             }
         }

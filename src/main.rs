@@ -47,7 +47,6 @@ fn main() {
             process::exit(1);
         }
     };
-    println!("{}", output);
 
     match File::create(output_file_path) {
         Ok(mut output_file) => {
