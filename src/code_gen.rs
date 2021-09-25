@@ -1,6 +1,7 @@
 use crate::instructions::InstType::*;
 use crate::instructions::*;
 
+// 命令形式に従って、バイナリを生成する
 pub fn gen_bin(inst: &Inst) -> String {
     match inst.ty {
         EOINST => "".to_string(),
@@ -39,6 +40,7 @@ pub fn gen_bin(inst: &Inst) -> String {
     }
 }
 
+// バイナリをhexに変換する
 pub fn gen_hex(inst: &Inst) -> String {
     let s = gen_bin(&inst);
     let mut cs = [0, 0, 0, 0, 0, 0, 0, 0];

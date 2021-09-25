@@ -44,7 +44,7 @@ impl<'a> Parser<'a> {
             // // S形式の命令
             SW => self.parse_s_sw(),
             // // R形式の命令
-            // ADD => self.parse_r_add(),
+            ADD => self.parse_r_add(),
             // SUB => self.parse_r_sub(),
             // AND => self.parse_r_and(),
             // OR => self.parse_r_or(),
@@ -165,40 +165,33 @@ impl<'a> Parser<'a> {
         })
     }
 
-    // // add 命令を parse するメソッド
-    // fn parse_r_add(&mut self) -> Result<Inst, String> {
-    //     // 先頭は ADD だとわかっているので、次の token をに進める
-    //     self.next_token();
+    // add 命令を parse するメソッド
+    fn parse_r_add(&mut self) -> Result<Asm, String> {
+        // 先頭は ADD だとわかっているので、次の token をに進める
+        self.next_token();
 
-    //     // 次の token は Number(x)
-    //     let rd = self.check_number_token()?;
+        // 次の token は Number(x)
+        let rd = self.check_number_token()?;
 
-    //     // 次の token は Comma
-    //     self.check_token_kind(Comma)?;
+        // 次の token は Comma
+        self.check_token_kind(Comma)?;
 
-    //     // 次の token は Number(x)
-    //     let rs1 = self.check_number_token()?;
+        // 次の token は Number(x)
+        let rs1 = self.check_number_token()?;
 
-    //     // 次の token は Comma
-    //     self.check_token_kind(Comma)?;
+        // 次の token は Comma
+        self.check_token_kind(Comma)?;
 
-    //     // 次の token は Number(x)
-    //     let rs2 = self.check_number_token()?;
+        // 次の token は Number(x)
+        let rs2 = self.check_number_token()?;
 
-    //     // 命令列の最後は改行文字
-    //     self.check_token_kind(NewLine)?;
+        // 命令列の最後は改行文字
+        self.check_token_kind(NewLine)?;
 
-    //     Ok(Inst {
-    //         ty: R {
-    //             funct7: 0b0000000,
-    //             rs2: rs2,
-    //             rs1: rs1,
-    //             funct3: 0b000,
-    //             rd: rd,
-    //             opcode: 0b0110011,
-    //         },
-    //     })
-    // }
+        Ok(Asm {
+            kind: AsmKind::ADD { rs2, rs1, rd },
+        })
+    }
 
     // fn parse_r_sub(&mut self) -> Result<Inst, String> {
     //     // 先頭は ADD だとわかっているので、次の token をに進める
@@ -391,23 +384,28 @@ mod parser_tests {
         assert_eq!(asm_kind, expect);
     }
 
-    // #[test]
-    // fn test_parser_r_add() {
-    //     let s: &str = "add 0, 10, 5\n";
-    //     let mut l = Lexer::new(s);
-    //     let mut p = Parser::new(&mut l);
-    //     let inst = p.parse().unwrap().ty;
-    //     let expect = R {
-    //         funct7: 0b0000000,
-    //         rs2: 5,
-    //         rs1: 10,
-    //         funct3: 0b000,
-    //         rd: 0,
-    //         opcode: 0b0110011,
-    //     };
+    #[test]
+    fn test_parser_r_add() {
+        let s: &str = "add 0, 10, 5\n";
+        let mut l = Lexer::new(s);
+        let mut p = Parser::new(&mut l);
+        let inst = p.parse().unwrap().kind;
+        let expect = AsmKind::ADD {
+            rs2: 5,
+            rs1: 10,
+            rd: 0,
+        };
+        // let expect = R {
+        //     funct7: 0b0000000,
+        //     rs2: 5,
+        //     rs1: 10,
+        //     funct3: 0b000,
+        //     rd: 0,
+        //     opcode: 0b0110011,
+        // };
 
-    //     assert_eq!(inst, expect);
-    // }
+        assert_eq!(inst, expect);
+    }
 
     // #[test]
     // fn test_parser_r_sub() {
