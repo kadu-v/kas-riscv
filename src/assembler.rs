@@ -17,7 +17,7 @@ impl<'a> Assembler<'a> {
     }
 
     //
-    pub fn gen_instruction(&mut self) -> Result<Inst, String> {
+    pub fn assemble(&mut self) -> Result<Inst, String> {
         let asm = self.p.parse()?;
         let inst_type = match asm.kind {
             LW { imm, rs1, rd } => I {
@@ -46,15 +46,39 @@ impl<'a> Assembler<'a> {
                 rd: rd,
                 opcode: 0b0010011,
             },
-            x => return Err(format!("{:?} is not implemnted", x)),
+            ADD { rs2, rs1, rd } => R {
+                funct7: 0b0000000,
+                rs2: rs2,
+                rs1: rs1,
+                funct3: 0b000,
+                rd: rd,
+                opcode: 0b0110011,
+            },
+            x => return Err(format!("Assembler::assemble: {:?} is not implemnted", x)),
         };
 
         Ok(Inst { ty: inst_type })
     }
 
+    // 全ての文字列をアセンブラに変換
+    #[allow(irrefutable_let_patterns)]
+    pub fn assemble_all(&mut self) -> Result<String, String> {
+        let mut src = "".to_string();
+        while let inst = self.assemble()? {
+            match inst {
+                Inst { ty: EOINST } => return Ok(src),
+                i => {
+                    let b = gen_bin(&i);
+                    src = format!("{}{}", src, b);
+                }
+            }
+        }
+        Err("Assembler::assemble_all: unreachable !!".to_string())
+    }
+
     //
     fn make_symbol_table(&mut self) -> HashMap<String, usize> {
-        unimplemented!("make_symbol_table have not implemented yet.")
+        unimplemented!("Assemble::make_symbol_table: make_symbol_table have not implemented yet.")
     }
 }
 
@@ -111,7 +135,7 @@ mod assemble_tests {
         let mut l = Lexer::new(s);
         let mut p = Parser::new(&mut l);
         let mut a = Assembler::new(&mut p);
-        let inst_ty = a.gen_instruction().unwrap().ty;
+        let inst_ty = a.assemble().unwrap().ty;
         let expect = I {
             imm: 16,
             rs1: 10,
@@ -128,7 +152,7 @@ mod assemble_tests {
         let mut l = Lexer::new(s);
         let mut p = Parser::new(&mut l);
         let mut a = Assembler::new(&mut p);
-        let inst_ty = a.gen_instruction().unwrap().ty;
+        let inst_ty = a.assemble().unwrap().ty;
         let expect = S {
             imm_1: 73,
             rs2: 6,
@@ -146,13 +170,31 @@ mod assemble_tests {
         let mut l = Lexer::new(s);
         let mut p = Parser::new(&mut l);
         let mut a = Assembler::new(&mut p);
-        let inst_ty = a.gen_instruction().unwrap().ty;
+        let inst_ty = a.assemble().unwrap().ty;
         let expect = I {
             imm: 10,
             rs1: 16,
             funct3: 0b000,
             rd: 6,
             opcode: 0b010011,
+        };
+        assert_eq!(inst_ty, expect);
+    }
+
+    #[test]
+    fn test_assembler_r_add() {
+        let s: &str = "add 0, 10, 5\n";
+        let mut l = Lexer::new(s);
+        let mut p = Parser::new(&mut l);
+        let mut a = Assembler::new(&mut p);
+        let inst_ty = a.assemble().unwrap().ty;
+        let expect = R {
+            funct7: 0b0000000,
+            rs2: 5,
+            rs1: 10,
+            funct3: 0b000,
+            rd: 0,
+            opcode: 0b0110011,
         };
         assert_eq!(inst_ty, expect);
     }

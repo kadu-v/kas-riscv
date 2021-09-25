@@ -49,14 +49,14 @@ impl<'a> Parser<'a> {
             // AND => self.parse_r_and(),
             // OR => self.parse_r_or(),
             // XOR => self.parse_r_xor(),
-            _ => Err("unsupported instruction!!".to_string()),
+            _ => Err("Parser::parse: unsupported instruction!!".to_string()),
         }
     }
     // cur_tok が kind と一致しているかチェックする
     fn check_token_kind(&mut self, kind: TokenKind) -> Result<(), String> {
         if self.cur_tok.kind != kind {
             return Err(format!(
-                "expected {:?}, but got {:?}",
+                "Parser::check_token_kind: expected {:?}, but got {:?}",
                 kind, self.cur_tok.kind
             ));
         }
@@ -71,7 +71,10 @@ impl<'a> Parser<'a> {
                 self.next_token();
                 Ok(x)
             }
-            _ => Err(format!("expected number, but got {:?}", self.cur_tok.kind)),
+            _ => Err(format!(
+                "Parser::check_number_token: expected number, but got {:?}",
+                self.cur_tok.kind
+            )),
         }
     }
 
@@ -389,7 +392,7 @@ mod parser_tests {
         let s: &str = "add 0, 10, 5\n";
         let mut l = Lexer::new(s);
         let mut p = Parser::new(&mut l);
-        let inst = p.parse().unwrap().kind;
+        let asm_kind = p.parse().unwrap().kind;
         let expect = AsmKind::ADD {
             rs2: 5,
             rs1: 10,
@@ -404,7 +407,7 @@ mod parser_tests {
         //     opcode: 0b0110011,
         // };
 
-        assert_eq!(inst, expect);
+        assert_eq!(asm_kind, expect);
     }
 
     // #[test]
