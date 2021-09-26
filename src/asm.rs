@@ -7,6 +7,8 @@ pub enum AsmKind {
     ADD { rs2: isize, rs1: isize, rd: isize },
     SUB { rs2: isize, rs1: isize, rd: isize },
     AND { rs2: isize, rs1: isize, rd: isize },
+    OR { rs2: isize, rs1: isize, rd: isize },
+    XOR { rs2: isize, rs1: isize, rd: isize },
 }
 
 #[derive(Debug, PartialEq, Eq)]

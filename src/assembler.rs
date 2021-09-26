@@ -70,6 +70,22 @@ impl<'a> Assembler<'a> {
                 rd: rd,
                 opcode: 0b0110011,
             },
+            OR { rs2, rs1, rd } => R {
+                funct7: 0b0000000,
+                rs2: rs2,
+                rs1: rs1,
+                funct3: 0b110,
+                rd: rd,
+                opcode: 0b0110011,
+            },
+            XOR { rs2, rs1, rd } => R {
+                funct7: 0b0000000,
+                rs2: rs2,
+                rs1: rs1,
+                funct3: 0b100,
+                rd: rd,
+                opcode: 0b0110011,
+            },
             EOASM => EOINST,
             x => return Err(format!("Assembler::assemble: {:?} is not implemnted", x)),
         };
@@ -248,6 +264,44 @@ mod assemble_tests {
             rs1: 10,
             funct3: 0b111,
             rd: 31,
+            opcode: 0b0110011,
+        };
+
+        assert_eq!(inst_ty, expect);
+    }
+
+    #[test]
+    fn test_assembler_r_or() {
+        let s: &str = "or 0, 100, 521\n";
+        let mut l = Lexer::new(s);
+        let mut p = Parser::new(&mut l);
+        let mut a = Assembler::new(&mut p);
+        let inst_ty = a.assemble().unwrap().ty;
+        let expect = R {
+            funct7: 0b0000000,
+            rs2: 521,
+            rs1: 100,
+            funct3: 0b110,
+            rd: 0,
+            opcode: 0b0110011,
+        };
+
+        assert_eq!(inst_ty, expect);
+    }
+
+    #[test]
+    fn test_assembler_r_xor() {
+        let s: &str = "xor 24, 111, 666\n";
+        let mut l = Lexer::new(s);
+        let mut p = Parser::new(&mut l);
+        let mut a = Assembler::new(&mut p);
+        let inst_ty = a.assemble().unwrap().ty;
+        let expect = R {
+            funct7: 0b0000000,
+            rs2: 666,
+            rs1: 111,
+            funct3: 0b100,
+            rd: 24,
             opcode: 0b0110011,
         };
 
