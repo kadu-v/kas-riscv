@@ -5,6 +5,7 @@ pub enum AsmKind {
     SW { imm: isize, rs2: isize, rs1: isize },
     ADDI { imm: isize, rs1: isize, rd: isize },
     ADD { rs2: isize, rs1: isize, rd: isize },
+    SUB { rs2: isize, rs1: isize, rd: isize },
 }
 
 #[derive(Debug, PartialEq, Eq)]
