@@ -46,7 +46,7 @@ impl<'a> Parser<'a> {
             // // R形式の命令
             ADD => self.parse_r_add(),
             SUB => self.parse_r_sub(),
-            // AND => self.parse_r_and(),
+            AND => self.parse_r_and(),
             // OR => self.parse_r_or(),
             // XOR => self.parse_r_xor(),
             _ => Err("Parser::parse: unsupported instruction!!".to_string()),
@@ -223,39 +223,32 @@ impl<'a> Parser<'a> {
         })
     }
 
-    // fn parse_r_and(&mut self) -> Result<Inst, String> {
-    //     // 先頭は AND だとわかっているので、次の token に進める
-    //     self.next_token();
+    fn parse_r_and(&mut self) -> Result<Asm, String> {
+        // 先頭は AND だとわかっているので、次の token に進める
+        self.next_token();
 
-    //     // 次の token は Number(x)
-    //     let rd = self.check_number_token()?;
+        // 次の token は Number(x)
+        let rd = self.check_number_token()?;
 
-    //     // 次の token は Comma
-    //     self.check_token_kind(Comma)?;
+        // 次の token は Comma
+        self.check_token_kind(Comma)?;
 
-    //     // 次の token は Number(x)
-    //     let rs1 = self.check_number_token()?;
+        // 次の token は Number(x)
+        let rs1 = self.check_number_token()?;
 
-    //     // 次の token は Comma
-    //     self.check_token_kind(Comma)?;
+        // 次の token は Comma
+        self.check_token_kind(Comma)?;
 
-    //     // 次の token は Number(x)
-    //     let rs2 = self.check_number_token()?;
+        // 次の token は Number(x)
+        let rs2 = self.check_number_token()?;
 
-    //     // 命令列の最後は改行文字
-    //     self.check_token_kind(NewLine)?;
+        // 命令列の最後は改行文字
+        self.check_token_kind(NewLine)?;
 
-    //     Ok(Inst {
-    //         ty: R {
-    //             funct7: 0b0000000,
-    //             rs2: rs2,
-    //             rs1: rs1,
-    //             funct3: 0b111,
-    //             rd: rd,
-    //             opcode: 0b0110011,
-    //         },
-    //     })
-    // }
+        Ok(Asm {
+            kind: AsmKind::AND { rs2, rs1, rd },
+        })
+    }
 
     // fn parse_r_or(&mut self) -> Result<Inst, String> {
     //     // 先頭は AND だとわかっているので、次の token に進める
@@ -400,42 +393,31 @@ mod parser_tests {
         let s: &str = "sub 1, 11, 6\n";
         let mut l = Lexer::new(s);
         let mut p = Parser::new(&mut l);
-        let inst = p.parse().unwrap().kind;
+        let asm_kind = p.parse().unwrap().kind;
 
         let expect = AsmKind::SUB {
             rs2: 6,
             rs1: 11,
             rd: 1,
         };
-        // let expect = R {
-        //     funct7: 0b0100000,
-        //     rs2: 6,
-        //     rs1: 11,
-        //     funct3: 0,
-        //     rd: 1,
-        //     opcode: 0b0110011,
-        // };
 
-        assert_eq!(inst, expect);
+        assert_eq!(asm_kind, expect);
     }
 
-    // #[test]
-    // fn test_parser_r_and() {
-    //     let s: &str = "and 31, 10, 1\n";
-    //     let mut l = Lexer::new(s);
-    //     let mut p = Parser::new(&mut l);
-    //     let inst = p.parse().unwrap().ty;
-    //     let expect = R {
-    //         funct7: 0b0000000,
-    //         rs2: 1,
-    //         rs1: 10,
-    //         funct3: 0b111,
-    //         rd: 31,
-    //         opcode: 0b0110011,
-    //     };
+    #[test]
+    fn test_parser_r_and() {
+        let s: &str = "and 31, 10, 1\n";
+        let mut l = Lexer::new(s);
+        let mut p = Parser::new(&mut l);
+        let asm_kind = p.parse().unwrap().kind;
+        let expect = AsmKind::AND {
+            rs2: 1,
+            rs1: 10,
+            rd: 31,
+        };
 
-    //     assert_eq!(inst, expect);
-    // }
+        assert_eq!(asm_kind, expect);
+    }
 
     // #[test]
     // fn test_parser_r_or() {

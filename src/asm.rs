@@ -6,6 +6,7 @@ pub enum AsmKind {
     ADDI { imm: isize, rs1: isize, rd: isize },
     ADD { rs2: isize, rs1: isize, rd: isize },
     SUB { rs2: isize, rs1: isize, rd: isize },
+    AND { rs2: isize, rs1: isize, rd: isize },
 }
 
 #[derive(Debug, PartialEq, Eq)]
