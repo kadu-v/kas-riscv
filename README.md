@@ -33,13 +33,11 @@ This is a minimal assembler for risc-v.
                   | Binary code (riscv) |
                   +---------------------+
 ```
-## How to install
+## How to install/use
 ```
 $ git clone git@github.com:kadu-v/kas-riscv.git
-$ 
+$ cd kas-riscv
+$ cargo run ./sources/add.kas
 ```
 
-
-
-
-## How to use
+`add.hex` file isi generated in `source` directry
