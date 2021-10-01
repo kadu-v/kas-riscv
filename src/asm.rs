@@ -1,3 +1,5 @@
+use std::isize;
+
 #[derive(Debug, PartialEq, Eq)]
 pub enum AsmKind {
     EOASM,
@@ -9,6 +11,10 @@ pub enum AsmKind {
     AND { rs2: isize, rs1: isize, rd: isize },
     OR { rs2: isize, rs1: isize, rd: isize },
     XOR { rs2: isize, rs1: isize, rd: isize },
+    SLT { rs2: isize, rs1: isize, rd: isize },
+    SLTU { rs2: isize, rs1: isize, rd: isize },
+    SLTI { imm: isize, rs1: isize, rd: isize },
+    SLTIU { imm: isize, rs1: isize, rd: isize },
 }
 
 #[derive(Debug, PartialEq, Eq)]

@@ -41,6 +41,8 @@ impl<'a> Parser<'a> {
             // I 形式の命令
             LW => self.parse_i_lw(),
             ADDI => self.parse_i_addi(),
+            SLTI => self.parse_i_slti(),
+            SLTIU => self.parse_i_sltiu(),
             // // S形式の命令
             SW => self.parse_s_sw(),
             // // R形式の命令
@@ -49,6 +51,8 @@ impl<'a> Parser<'a> {
             AND => self.parse_r_and(),
             OR => self.parse_r_or(),
             XOR => self.parse_r_xor(),
+            SLT => self.parse_r_slt(),
+            SLTU => self.parse_r_sltu(),
             _ => Err("Parser::parse: unsupported instruction!!".to_string()),
         }
     }
@@ -303,6 +307,114 @@ impl<'a> Parser<'a> {
             kind: AsmKind::XOR { rs2, rs1, rd },
         })
     }
+
+    fn parse_r_slt(&mut self) -> Result<Asm, String> {
+        // 先頭は SLT だとわかっているので、次の token に進める
+        self.next_token();
+
+        // 次の token は Number(x)
+        let rd = self.check_number_token()?;
+
+        // 次の token は Comma
+        self.check_token_kind(Comma)?;
+
+        // 次の token は Number(x)
+        let rs1 = self.check_number_token()?;
+
+        // 次の token は Comma
+        self.check_token_kind(Comma)?;
+
+        // 次の token は Number(x)
+        let rs2 = self.check_number_token()?;
+
+        // 命令列の最後は改行文字
+        self.check_token_kind(NewLine)?;
+
+        Ok(Asm {
+            kind: AsmKind::SLT { rs2, rs1, rd },
+        })
+    }
+
+    fn parse_r_sltu(&mut self) -> Result<Asm, String> {
+        // 先頭は SLTU だとわかっているので、次の token に進める
+        self.next_token();
+
+        // 次の token は Number(x)
+        let rd = self.check_number_token()?;
+
+        // 次の token は Comma
+        self.check_token_kind(Comma)?;
+
+        // 次の token は Number(x)
+        let rs1 = self.check_number_token()?;
+
+        // 次の token は Comma
+        self.check_token_kind(Comma)?;
+
+        // 次の token は Number(x)
+        let rs2 = self.check_number_token()?;
+
+        // 命令列の最後は改行文字
+        self.check_token_kind(NewLine)?;
+
+        Ok(Asm {
+            kind: AsmKind::SLTU { rs2, rs1, rd },
+        })
+    }
+
+    fn parse_i_slti(&mut self) -> Result<Asm, String> {
+        // 先頭は SLTI だとわかっているので、次の token に進める
+        self.next_token();
+
+        // 次の token は Number(x)
+        let rd = self.check_number_token()?;
+
+        // 次の token は Comma
+        self.check_token_kind(Comma)?;
+
+        // 次の token は Number(x)
+        let rs1 = self.check_number_token()?;
+
+        // 次の token は Comma
+        self.check_token_kind(Comma)?;
+
+        // 次の token は Number(x)
+        let imm = self.check_number_token()?;
+
+        // 命令列の最後は改行文字
+        self.check_token_kind(NewLine)?;
+
+        Ok(Asm {
+            kind: AsmKind::SLTI { imm, rs1, rd },
+        })
+    }
+
+    fn parse_i_sltiu(&mut self) -> Result<Asm, String> {
+        // 先頭は SLTIU だとわかっているので、次の token に進める
+        self.next_token();
+
+        // 次の token は Number(x)
+        let rd = self.check_number_token()?;
+
+        // 次の token は Comma
+        self.check_token_kind(Comma)?;
+
+        // 次の token は Number(x)
+        let rs1 = self.check_number_token()?;
+
+        // 次の token は Comma
+        self.check_token_kind(Comma)?;
+
+        // 次の token は Number(x)
+        let imm = self.check_number_token()?;
+
+        // 命令列の最後は改行文字
+        self.check_token_kind(NewLine)?;
+
+        Ok(Asm {
+            kind: AsmKind::SLTIU { imm, rs1, rd },
+        })
+    }
 }
 
 #[cfg(test)]
@@ -416,15 +528,6 @@ mod parser_tests {
             rs1: 100,
             rd: 0,
         };
-        // let expect = R {
-        //     funct7: 0b0000000,
-        //     rs2: 521,
-        //     rs1: 100,
-        //     funct3: 0b110,
-        //     rd: 0,
-        //     opcode: 0b0110011,
-        // };
-
         assert_eq!(asm_kind, expect);
     }
 
@@ -439,15 +542,60 @@ mod parser_tests {
             rs1: 111,
             rd: 24,
         };
-        // let expect = R {
-        //     funct7: 0b0000000,
-        //     rs2: 666,
-        //     rs1: 111,
-        //     funct3: 0b100,
-        //     rd: 24,
-        //     opcode: 0b0110011,
-        // };
+        assert_eq!(asm_kind, expect);
+    }
 
+    #[test]
+    fn test_parser_r_slt() {
+        let s: &str = "slt 24, 11, 5\n";
+        let mut l = Lexer::new(s);
+        let mut p = Parser::new(&mut l);
+        let asm_kind = p.parse().unwrap().kind;
+        let expect = AsmKind::SLT {
+            rs2: 5,
+            rs1: 11,
+            rd: 24,
+        };
+        assert_eq!(asm_kind, expect);
+    }
+
+    #[test]
+    fn test_parser_r_sltu() {
+        let s: &str = "sltu 24, 0, 10\n";
+        let mut l = Lexer::new(s);
+        let mut p = Parser::new(&mut l);
+        let asm_kind = p.parse().unwrap().kind;
+        let expect = AsmKind::SLTU {
+            rs2: 10,
+            rs1: 0,
+            rd: 24,
+        };
+        assert_eq!(asm_kind, expect);
+    }
+    #[test]
+    fn test_parser_i_slti() {
+        let s: &str = "slti 3, 2, -1\n";
+        let mut l = Lexer::new(s);
+        let mut p = Parser::new(&mut l);
+        let asm_kind = p.parse().unwrap().kind;
+        let expect = AsmKind::SLTI {
+            imm: -1,
+            rs1: 2,
+            rd: 3,
+        };
+        assert_eq!(asm_kind, expect);
+    }
+    #[test]
+    fn test_parser_i_sltiu() {
+        let s: &str = "sltiu 24, 9, 666\n";
+        let mut l = Lexer::new(s);
+        let mut p = Parser::new(&mut l);
+        let asm_kind = p.parse().unwrap().kind;
+        let expect = AsmKind::SLTIU {
+            imm: 666,
+            rs1: 9,
+            rd: 24,
+        };
         assert_eq!(asm_kind, expect);
     }
 }

@@ -39,6 +39,7 @@ impl<'a> Assembler<'a> {
                     opcode: 0b0100011,
                 }
             }
+            // 加減算
             ADDI { imm, rs1, rd } => I {
                 imm: imm,
                 rs1: rs1,
@@ -62,6 +63,7 @@ impl<'a> Assembler<'a> {
                 rd: rd,
                 opcode: 0b0110011,
             },
+            // 論理演算
             AND { rs2, rs1, rd } => R {
                 funct7: 0b0000000,
                 rs2: rs2,
@@ -85,6 +87,37 @@ impl<'a> Assembler<'a> {
                 funct3: 0b100,
                 rd: rd,
                 opcode: 0b0110011,
+            },
+            // 比較演算
+            SLT { rs2, rs1, rd } => R {
+                funct7: 0b0000000,
+                rs2: rs2,
+                rs1: rs1,
+                funct3: 0b010,
+                rd: rd,
+                opcode: 0b0110011,
+            },
+            SLTU { rs2, rs1, rd } => R {
+                funct7: 0b0000000,
+                rs2: rs2,
+                rs1: rs1,
+                funct3: 0b011,
+                rd: rd,
+                opcode: 0b0110011,
+            },
+            SLTI { imm, rs1, rd } => I {
+                imm: imm,
+                rs1: rs1,
+                funct3: 0b010,
+                rd: rd,
+                opcode: 0b0010011,
+            },
+            SLTIU { imm, rs1, rd } => I {
+                imm: imm,
+                rs1: rs1,
+                funct3: 0b011,
+                rd: rd,
+                opcode: 0b0010011,
             },
             EOASM => EOINST,
             x => return Err(format!("Assembler::assemble: {:?} is not implemnted", x)),
@@ -303,6 +336,80 @@ mod assemble_tests {
             funct3: 0b100,
             rd: 24,
             opcode: 0b0110011,
+        };
+
+        assert_eq!(inst_ty, expect);
+    }
+
+    #[test]
+    fn test_assembler_r_slt() {
+        let s: &str = "slt 24, 11, 6\n";
+        let mut l = Lexer::new(s);
+        let mut p = Parser::new(&mut l);
+        let mut a = Assembler::new(&mut p);
+        let inst_ty = a.assemble().unwrap().ty;
+        let expect = R {
+            funct7: 0b0000000,
+            rs2: 6,
+            rs1: 11,
+            funct3: 0b010,
+            rd: 24,
+            opcode: 0b0110011,
+        };
+
+        assert_eq!(inst_ty, expect);
+    }
+
+    #[test]
+    fn test_assembler_r_sltu() {
+        let s: &str = "sltu 24, 3, 9\n";
+        let mut l = Lexer::new(s);
+        let mut p = Parser::new(&mut l);
+        let mut a = Assembler::new(&mut p);
+        let inst_ty = a.assemble().unwrap().ty;
+        let expect = R {
+            funct7: 0b0000000,
+            rs2: 9,
+            rs1: 3,
+            funct3: 0b011,
+            rd: 24,
+            opcode: 0b0110011,
+        };
+
+        assert_eq!(inst_ty, expect);
+    }
+
+    #[test]
+    fn test_assembler_r_slti() {
+        let s: &str = "slti 7, 2, -10\n";
+        let mut l = Lexer::new(s);
+        let mut p = Parser::new(&mut l);
+        let mut a = Assembler::new(&mut p);
+        let inst_ty = a.assemble().unwrap().ty;
+        let expect = I {
+            imm: -10,
+            rs1: 2,
+            funct3: 0b010,
+            rd: 7,
+            opcode: 0b0010011,
+        };
+
+        assert_eq!(inst_ty, expect);
+    }
+
+    #[test]
+    fn test_assembler_r_sltiu() {
+        let s: &str = "sltiu 5, 6, -11\n";
+        let mut l = Lexer::new(s);
+        let mut p = Parser::new(&mut l);
+        let mut a = Assembler::new(&mut p);
+        let inst_ty = a.assemble().unwrap().ty;
+        let expect = I {
+            imm: -11,
+            rs1: 6,
+            funct3: 0b011,
+            rd: 5,
+            opcode: 0b0010011,
         };
 
         assert_eq!(inst_ty, expect);

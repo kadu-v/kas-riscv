@@ -824,4 +824,220 @@ mod lexer_tests {
             }
         );
     }
+    #[test]
+    fn test_lexer_r_slt() {
+        let s = "slt 0, 1, 10\n";
+        let mut l = Lexer::new(s);
+        assert_eq!(
+            l.next_token(),
+            Token {
+                kind: TokenKind::SLT
+            }
+        );
+        assert_eq!(
+            l.next_token(),
+            Token {
+                kind: TokenKind::Number(0)
+            }
+        );
+        assert_eq!(
+            l.next_token(),
+            Token {
+                kind: TokenKind::Comma
+            }
+        );
+        assert_eq!(
+            l.next_token(),
+            Token {
+                kind: TokenKind::Number(1)
+            }
+        );
+        assert_eq!(
+            l.next_token(),
+            Token {
+                kind: TokenKind::Comma
+            }
+        );
+
+        assert_eq!(
+            l.next_token(),
+            Token {
+                kind: TokenKind::Number(10)
+            }
+        );
+        assert_eq!(
+            l.next_token(),
+            Token {
+                kind: TokenKind::NewLine
+            }
+        );
+        assert_eq!(
+            l.next_token(),
+            Token {
+                kind: TokenKind::EOF
+            }
+        );
+    }
+    #[test]
+    fn test_lexer_r_sltu() {
+        let s = "sltu 5, 7, 31\n";
+        let mut l = Lexer::new(s);
+        assert_eq!(
+            l.next_token(),
+            Token {
+                kind: TokenKind::SLTU
+            }
+        );
+        assert_eq!(
+            l.next_token(),
+            Token {
+                kind: TokenKind::Number(5)
+            }
+        );
+        assert_eq!(
+            l.next_token(),
+            Token {
+                kind: TokenKind::Comma
+            }
+        );
+        assert_eq!(
+            l.next_token(),
+            Token {
+                kind: TokenKind::Number(7)
+            }
+        );
+        assert_eq!(
+            l.next_token(),
+            Token {
+                kind: TokenKind::Comma
+            }
+        );
+
+        assert_eq!(
+            l.next_token(),
+            Token {
+                kind: TokenKind::Number(31)
+            }
+        );
+        assert_eq!(
+            l.next_token(),
+            Token {
+                kind: TokenKind::NewLine
+            }
+        );
+        assert_eq!(
+            l.next_token(),
+            Token {
+                kind: TokenKind::EOF
+            }
+        );
+    }
+    #[test]
+    fn test_lexer_i_slti() {
+        let s = "slti 0, 1, -31\n";
+        let mut l = Lexer::new(s);
+        assert_eq!(
+            l.next_token(),
+            Token {
+                kind: TokenKind::SLTI
+            }
+        );
+        assert_eq!(
+            l.next_token(),
+            Token {
+                kind: TokenKind::Number(0)
+            }
+        );
+        assert_eq!(
+            l.next_token(),
+            Token {
+                kind: TokenKind::Comma
+            }
+        );
+        assert_eq!(
+            l.next_token(),
+            Token {
+                kind: TokenKind::Number(1)
+            }
+        );
+        assert_eq!(
+            l.next_token(),
+            Token {
+                kind: TokenKind::Comma
+            }
+        );
+
+        assert_eq!(
+            l.next_token(),
+            Token {
+                kind: TokenKind::Number(-31)
+            }
+        );
+        assert_eq!(
+            l.next_token(),
+            Token {
+                kind: TokenKind::NewLine
+            }
+        );
+        assert_eq!(
+            l.next_token(),
+            Token {
+                kind: TokenKind::EOF
+            }
+        );
+    }
+    #[test]
+    fn test_lexer_i_sltiu() {
+        let s = "sltiu 6, 8, -100\n";
+        let mut l = Lexer::new(s);
+        assert_eq!(
+            l.next_token(),
+            Token {
+                kind: TokenKind::SLTIU
+            }
+        );
+        assert_eq!(
+            l.next_token(),
+            Token {
+                kind: TokenKind::Number(6)
+            }
+        );
+        assert_eq!(
+            l.next_token(),
+            Token {
+                kind: TokenKind::Comma
+            }
+        );
+        assert_eq!(
+            l.next_token(),
+            Token {
+                kind: TokenKind::Number(8)
+            }
+        );
+        assert_eq!(
+            l.next_token(),
+            Token {
+                kind: TokenKind::Comma
+            }
+        );
+
+        assert_eq!(
+            l.next_token(),
+            Token {
+                kind: TokenKind::Number(-100)
+            }
+        );
+        assert_eq!(
+            l.next_token(),
+            Token {
+                kind: TokenKind::NewLine
+            }
+        );
+        assert_eq!(
+            l.next_token(),
+            Token {
+                kind: TokenKind::EOF
+            }
+        );
+    }
 }
