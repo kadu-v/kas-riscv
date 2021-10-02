@@ -21,7 +21,7 @@ This is a minimal assembler for risc-v.
                       | Asm struct  |  
                       +------+------+  
                              |                        +--------------+
-                             v  ----------------------| aseembelr.rs |
+                             v  ----------------------| aseembler.rs |
                              |                        +--------------+
                       +------+------+  
                       | Inst struct |  
