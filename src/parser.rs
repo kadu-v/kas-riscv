@@ -43,6 +43,9 @@ impl<'a> Parser<'a> {
             ADDI => self.parse_i_addi(),
             SLTI => self.parse_i_slti(),
             SLTIU => self.parse_i_sltiu(),
+            SLLI => self.parse_i_slli(),
+            SRLI => self.parse_i_srli(),
+            SRAI => self.parse_i_srai(),
             // // S形式の命令
             SW => self.parse_s_sw(),
             // // R形式の命令
@@ -53,6 +56,9 @@ impl<'a> Parser<'a> {
             XOR => self.parse_r_xor(),
             SLT => self.parse_r_slt(),
             SLTU => self.parse_r_sltu(),
+            SLL => self.parse_r_sll(),
+            SRL => self.parse_r_srl(),
+            SRA => self.parse_r_sra(),
             _ => Err("Parser::parse: unsupported instruction!!".to_string()),
         }
     }
@@ -415,11 +421,173 @@ impl<'a> Parser<'a> {
             kind: AsmKind::SLTIU { imm, rs1, rd },
         })
     }
+
+    fn parse_r_sll(&mut self) -> Result<Asm, String> {
+        // 先頭は SLL だとわかっているので、次の token に進める
+        self.next_token();
+
+        // 次の token は Number(x)
+        let rd = self.check_number_token()?;
+
+        // 次の token は Comma
+        self.check_token_kind(Comma)?;
+
+        // 次の token は Number(x)
+        let rs1 = self.check_number_token()?;
+
+        // 次の token は Comma
+        self.check_token_kind(Comma)?;
+
+        // 次の token は Number(x)
+        let rs2 = self.check_number_token()?;
+
+        // 命令列の最後は改行文字
+        self.check_token_kind(NewLine)?;
+
+        Ok(Asm {
+            kind: AsmKind::SLL { rs2, rs1, rd },
+        })
+    }
+
+    fn parse_r_srl(&mut self) -> Result<Asm, String> {
+        // 先頭は SLL だとわかっているので、次の token に進める
+        self.next_token();
+
+        // 次の token は Number(x)
+        let rd = self.check_number_token()?;
+
+        // 次の token は Comma
+        self.check_token_kind(Comma)?;
+
+        // 次の token は Number(x)
+        let rs1 = self.check_number_token()?;
+
+        // 次の token は Comma
+        self.check_token_kind(Comma)?;
+
+        // 次の token は Number(x)
+        let rs2 = self.check_number_token()?;
+
+        // 命令列の最後は改行文字
+        self.check_token_kind(NewLine)?;
+
+        Ok(Asm {
+            kind: AsmKind::SRL { rs2, rs1, rd },
+        })
+    }
+
+    fn parse_r_sra(&mut self) -> Result<Asm, String> {
+        // 先頭は SLL だとわかっているので、次の token に進める
+        self.next_token();
+
+        // 次の token は Number(x)
+        let rd = self.check_number_token()?;
+
+        // 次の token は Comma
+        self.check_token_kind(Comma)?;
+
+        // 次の token は Number(x)
+        let rs1 = self.check_number_token()?;
+
+        // 次の token は Comma
+        self.check_token_kind(Comma)?;
+
+        // 次の token は Number(x)
+        let rs2 = self.check_number_token()?;
+
+        // 命令列の最後は改行文字
+        self.check_token_kind(NewLine)?;
+
+        Ok(Asm {
+            kind: AsmKind::SRA { rs2, rs1, rd },
+        })
+    }
+
+    fn parse_i_slli(&mut self) -> Result<Asm, String> {
+        // 先頭は SLL だとわかっているので、次の token に進める
+        self.next_token();
+
+        // 次の token は Number(x)
+        let rd = self.check_number_token()?;
+
+        // 次の token は Comma
+        self.check_token_kind(Comma)?;
+
+        // 次の token は Number(x)
+        let rs1 = self.check_number_token()?;
+
+        // 次の token は Comma
+        self.check_token_kind(Comma)?;
+
+        // 次の token は Number(x)
+        let imm = self.check_number_token()?;
+
+        // 命令列の最後は改行文字
+        self.check_token_kind(NewLine)?;
+
+        Ok(Asm {
+            kind: AsmKind::SLLI { imm, rs1, rd },
+        })
+    }
+
+    fn parse_i_srli(&mut self) -> Result<Asm, String> {
+        // 先頭は SLL だとわかっているので、次の token に進める
+        self.next_token();
+
+        // 次の token は Number(x)
+        let rd = self.check_number_token()?;
+
+        // 次の token は Comma
+        self.check_token_kind(Comma)?;
+
+        // 次の token は Number(x)
+        let rs1 = self.check_number_token()?;
+
+        // 次の token は Comma
+        self.check_token_kind(Comma)?;
+
+        // 次の token は Number(x)
+        let imm = self.check_number_token()?;
+
+        // 命令列の最後は改行文字
+        self.check_token_kind(NewLine)?;
+
+        Ok(Asm {
+            kind: AsmKind::SRLI { imm, rs1, rd },
+        })
+    }
+
+    fn parse_i_srai(&mut self) -> Result<Asm, String> {
+        // 先頭は SLL だとわかっているので、次の token に進める
+        self.next_token();
+
+        // 次の token は Number(x)
+        let rd = self.check_number_token()?;
+
+        // 次の token は Comma
+        self.check_token_kind(Comma)?;
+
+        // 次の token は Number(x)
+        let rs1 = self.check_number_token()?;
+
+        // 次の token は Comma
+        self.check_token_kind(Comma)?;
+
+        // 次の token は Number(x)
+        let imm = self.check_number_token()?;
+
+        // 命令列の最後は改行文字
+        self.check_token_kind(NewLine)?;
+
+        Ok(Asm {
+            kind: AsmKind::SRAI { imm, rs1, rd },
+        })
+    }
 }
 
 #[cfg(test)]
 mod parser_tests {
-    use crate::instructions::{Inst, InstType::*};
+    use crate::inst::{Inst, InstType::*};
     use crate::lexer::*;
     use crate::parser::*;
     use crate::token::TokenKind::*;
@@ -595,6 +763,72 @@ mod parser_tests {
             imm: 666,
             rs1: 9,
             rd: 24,
+        };
+        assert_eq!(asm_kind, expect);
+    }
+    #[test]
+    fn test_parser_i_sll() {
+        let s: &str = "sll 24, 9, 3\n";
+        let mut l = Lexer::new(s);
+        let mut p = Parser::new(&mut l);
+        let asm_kind = p.parse().unwrap().kind;
+        let expect = AsmKind::SLL {
+            rs2: 3,
+            rs1: 9,
+            rd: 24,
+        };
+        assert_eq!(asm_kind, expect);
+    }
+    #[test]
+    fn test_parser_i_srl() {
+        let s: &str = "srl 4, 9, 6\n";
+        let mut l = Lexer::new(s);
+        let mut p = Parser::new(&mut l);
+        let asm_kind = p.parse().unwrap().kind;
+        let expect = AsmKind::SRL {
+            rs2: 6,
+            rs1: 9,
+            rd: 4,
+        };
+        assert_eq!(asm_kind, expect);
+    }
+    #[test]
+    fn test_parser_i_sra() {
+        let s: &str = "sra 5, 9, 16\n";
+        let mut l = Lexer::new(s);
+        let mut p = Parser::new(&mut l);
+        let asm_kind = p.parse().unwrap().kind;
+        let expect = AsmKind::SRA {
+            rs2: 16,
+            rs1: 9,
+            rd: 5,
+        };
+        assert_eq!(asm_kind, expect);
+    }
+
+    #[test]
+    fn test_parser_i_slli() {
+        let s: &str = "slli 5, 9, -16\n";
+        let mut l = Lexer::new(s);
+        let mut p = Parser::new(&mut l);
+        let asm_kind = p.parse().unwrap().kind;
+        let expect = AsmKind::SLLI {
+            imm: -16,
+            rs1: 9,
+            rd: 5,
+        };
+        assert_eq!(asm_kind, expect);
+    }
+    #[test]
+    fn test_parser_i_slai() {
+        let s: &str = "srai 5, 9, -1\n";
+        let mut l = Lexer::new(s);
+        let mut p = Parser::new(&mut l);
+        let asm_kind = p.parse().unwrap().kind;
+        let expect = AsmKind::SRAI {
+            imm: -1,
+            rs1: 9,
+            rd: 5,
         };
         assert_eq!(asm_kind, expect);
     }

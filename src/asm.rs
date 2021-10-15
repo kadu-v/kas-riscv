@@ -15,6 +15,12 @@ pub enum AsmKind {
     SLTU { rs2: isize, rs1: isize, rd: isize },
     SLTI { imm: isize, rs1: isize, rd: isize },
     SLTIU { imm: isize, rs1: isize, rd: isize },
+    SLL { rs2: isize, rs1: isize, rd: isize },
+    SRL { rs2: isize, rs1: isize, rd: isize },
+    SRA { rs2: isize, rs1: isize, rd: isize },
+    SLLI { imm: isize, rs1: isize, rd: isize },
+    SRLI { imm: isize, rs1: isize, rd: isize },
+    SRAI { imm: isize, rs1: isize, rd: isize },
 }
 
 #[derive(Debug, PartialEq, Eq)]

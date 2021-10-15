@@ -18,6 +18,12 @@ static KEYWORDS: Lazy<HashMap<&str, TokenKind>> = Lazy::new(|| {
         ("sltu", TokenKind::SLTU),
         ("slti", TokenKind::SLTI),
         ("sltiu", TokenKind::SLTIU),
+        ("sll", TokenKind::SLL),
+        ("srl", TokenKind::SRL),
+        ("sra", TokenKind::SRA),
+        ("slli", TokenKind::SLLI),
+        ("srli", TokenKind::SRLI),
+        ("srai", TokenKind::SRAI),
     ]
     .iter()
     .cloned()
@@ -56,6 +62,12 @@ pub enum TokenKind {
     SLTU,  // sltu
     SLTI,  // slti
     SLTIU, // sltiu
+    SLL,   // sll
+    SRL,   // srl
+    SRA,   // sra
+    SLLI,  // slli
+    SRLI,  // srli
+    SRAI,  // srai
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]

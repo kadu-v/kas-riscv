@@ -3,7 +3,7 @@ use std::iter::Inspect;
 
 use crate::asm::{Asm, AsmKind::*};
 use crate::code_gen::{gen_bin, gen_hex};
-use crate::instructions::{Inst, InstType::*};
+use crate::inst::{Inst, InstType::*};
 use crate::parser::*;
 
 pub struct Assembler<'a> {
@@ -119,6 +119,51 @@ impl<'a> Assembler<'a> {
                 rd: rd,
                 opcode: 0b0010011,
             },
+            SLL { rs2, rs1, rd } => R {
+                funct7: 0b0000000,
+                rs2: rs2,
+                rs1: rs1,
+                funct3: 0b001,
+                rd: rd,
+                opcode: 0b0110011,
+            },
+            SRL { rs2, rs1, rd } => R {
+                funct7: 0b0000000,
+                rs2: rs2,
+                rs1: rs1,
+                funct3: 0b101,
+                rd: rd,
+                opcode: 0b0110011,
+            },
+            SRA { rs2, rs1, rd } => R {
+                funct7: 0b0100000,
+                rs2: rs2,
+                rs1: rs1,
+                funct3: 0b101,
+                rd: rd,
+                opcode: 0b0110011,
+            },
+            SLLI { imm, rs1, rd } => I {
+                imm: imm,
+                rs1: rs1,
+                funct3: 001,
+                rd: rd,
+                opcode: 0b0010011,
+            },
+            SRLI { imm, rs1, rd } => I {
+                imm: imm,
+                rs1: rs1,
+                funct3: 0b101,
+                rd: rd,
+                opcode: 0b0010011,
+            },
+            SRAI { imm, rs1, rd } => I {
+                imm: 0b010000000000 + imm,
+                rs1: rs1,
+                funct3: 0b101,
+                rd: rd,
+                opcode: 0b0010011,
+            },
             EOASM => EOINST,
             x => return Err(format!("Assembler::assemble: {:?} is not implemnted", x)),
         };
@@ -191,7 +236,7 @@ impl<'a> Assembler<'a> {
 mod assemble_tests {
     use crate::asm::{Asm, AsmKind};
     use crate::assembler::Assembler;
-    use crate::instructions::{Inst, InstType::*};
+    use crate::inst::{Inst, InstType::*};
     use crate::lexer::*;
     use crate::parser::*;
 
@@ -408,6 +453,111 @@ mod assemble_tests {
             imm: -11,
             rs1: 6,
             funct3: 0b011,
+            rd: 5,
+            opcode: 0b0010011,
+        };
+
+        assert_eq!(inst_ty, expect);
+    }
+
+    #[test]
+    fn test_assembler_r_sll() {
+        let s: &str = "sll 5, 6, 11\n";
+        let mut l = Lexer::new(s);
+        let mut p = Parser::new(&mut l);
+        let mut a = Assembler::new(&mut p);
+        let inst_ty = a.assemble().unwrap().ty;
+        let expect = R {
+            funct7: 0b0000000,
+            rs2: 11,
+            rs1: 6,
+            funct3: 0b001,
+            rd: 5,
+            opcode: 0b0110011,
+        };
+        assert_eq!(inst_ty, expect);
+    }
+    #[test]
+    fn test_assembler_r_srl() {
+        let s: &str = "srl 3, 0, 1\n";
+        let mut l = Lexer::new(s);
+        let mut p = Parser::new(&mut l);
+        let mut a = Assembler::new(&mut p);
+        let inst_ty = a.assemble().unwrap().ty;
+        let expect = R {
+            funct7: 0b0000000,
+            rs2: 1,
+            rs1: 0,
+            funct3: 0b101,
+            rd: 3,
+            opcode: 0b0110011,
+        };
+
+        assert_eq!(inst_ty, expect);
+    }
+    #[test]
+    fn test_assembler_r_sra() {
+        let s: &str = "sra 2, 19, 15\n";
+        let mut l = Lexer::new(s);
+        let mut p = Parser::new(&mut l);
+        let mut a = Assembler::new(&mut p);
+        let inst_ty = a.assemble().unwrap().ty;
+        let expect = R {
+            funct7: 0b0100000,
+            rs2: 15,
+            rs1: 19,
+            funct3: 0b101,
+            rd: 2,
+            opcode: 0b0110011,
+        };
+
+        assert_eq!(inst_ty, expect);
+    }
+    #[test]
+    fn test_assembler_r_slli() {
+        let s: &str = "slli 5, 6, 31\n";
+        let mut l = Lexer::new(s);
+        let mut p = Parser::new(&mut l);
+        let mut a = Assembler::new(&mut p);
+        let inst_ty = a.assemble().unwrap().ty;
+        let expect = I {
+            imm: 31,
+            rs1: 6,
+            funct3: 0b001,
+            rd: 5,
+            opcode: 0b0010011,
+        };
+
+        assert_eq!(inst_ty, expect);
+    }
+    #[test]
+    fn test_assembler_r_srli() {
+        let s: &str = "srli 5, 6, 10\n";
+        let mut l = Lexer::new(s);
+        let mut p = Parser::new(&mut l);
+        let mut a = Assembler::new(&mut p);
+        let inst_ty = a.assemble().unwrap().ty;
+        let expect = I {
+            imm: 10,
+            rs1: 6,
+            funct3: 0b101,
+            rd: 5,
+            opcode: 0b0010011,
+        };
+
+        assert_eq!(inst_ty, expect);
+    }
+    #[test]
+    fn test_assembler_r_slai() {
+        let s: &str = "srai 5, 6, 11\n";
+        let mut l = Lexer::new(s);
+        let mut p = Parser::new(&mut l);
+        let mut a = Assembler::new(&mut p);
+        let inst_ty = a.assemble().unwrap().ty;
+        let expect = I {
+            imm: 0b010000000000 + 11,
+            rs1: 6,
+            funct3: 0b101,
             rd: 5,
             opcode: 0b0010011,
         };
