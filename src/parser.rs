@@ -1,6 +1,6 @@
 use std::result::Result;
 
-use crate::asm::{Asm, AsmKind};
+use crate::asm::{self, Asm, AsmKind};
 
 use crate::lexer::*;
 use crate::token::TokenKind::*;
@@ -59,14 +59,21 @@ impl<'a> Parser<'a> {
             SLL => self.parse_r_sll(),
             SRL => self.parse_r_srl(),
             SRA => self.parse_r_sra(),
+            // B形式
+            BEQ => self.parse_b_beq(),
+            BNE => self.parse_b_bne(),
+            BLT => self.parse_b_blt(),
+            BGE => self.parse_b_bge(),
+            BLTU => self.parse_b_bltu(),
+            BGEU => self.parse_b_bgeu(),
             _ => Err("Parser::parse: unsupported instruction!!".to_string()),
         }
     }
     // cur_tok が kind と一致しているかチェックする
-    fn check_token_kind(&mut self, kind: TokenKind) -> Result<(), String> {
+    fn read_token_kind(&mut self, kind: TokenKind) -> Result<(), String> {
         if self.cur_tok.kind != kind {
             return Err(format!(
-                "Parser::check_token_kind: expected {:?}, but got {:?}",
+                "Parser::read_token_kind: expected {:?}, but got {:?}",
                 kind, self.cur_tok.kind
             ));
         }
@@ -75,17 +82,30 @@ impl<'a> Parser<'a> {
     }
 
     // Number(x) トークンかをチェックし、数字を返す
-    fn check_number_token(&mut self) -> Result<isize, String> {
+    fn read_number_token(&mut self) -> Result<isize, String> {
         match self.cur_tok.kind {
             Number(x) => {
                 self.next_token();
                 Ok(x)
             }
             _ => Err(format!(
-                "Parser::check_number_token: expected number, but got {:?}",
+                "Parser::read_number_token: expected number, but got {:?}",
                 self.cur_tok.kind
             )),
         }
+    }
+
+    fn read_number_or_symbol_token(&mut self) -> Result<(Option<isize>, Option<String>), String> {
+        let asm_kind = match self.cur_tok.kind.clone() {
+            Number(x) => Ok((Some(x), None)),
+            Symbol(s) => Ok((None, Some(s))),
+            _ => Err(format!(
+                "Parser::read_number_orsymbol_token: expected number or symbol, but got {:?}",
+                self.cur_tok.kind
+            )),
+        };
+        self.next_token();
+        asm_kind
     }
 
     // lw 命令をparseするメソッド
@@ -94,25 +114,25 @@ impl<'a> Parser<'a> {
         self.next_token();
 
         //　次のtokenはレジスタ番号を表す数字 "rd"
-        let rd = self.check_number_token()?;
+        let rd = self.read_number_token()?;
 
         // 次のtokenは Comma
-        self.check_token_kind(Comma)?;
+        self.read_token_kind(Comma)?;
 
         // 次のtokenは Number(x)
-        let imm = self.check_number_token()?;
+        let imm = self.read_number_token()?;
 
         // 次のtokenは LParen
-        self.check_token_kind(LParen)?;
+        self.read_token_kind(LParen)?;
 
         //　次のtokenは Number(x)
-        let rs1 = self.check_number_token()?;
+        let rs1 = self.read_number_token()?;
 
         // 次のtokenは RParen
-        self.check_token_kind(RParen)?;
+        self.read_token_kind(RParen)?;
 
         // 命令列の末端は改行文字
-        self.check_token_kind(NewLine)?;
+        self.read_token_kind(NewLine)?;
 
         Ok(Asm {
             kind: AsmKind::LW { imm, rs1, rd },
@@ -125,25 +145,25 @@ impl<'a> Parser<'a> {
         self.next_token();
 
         // 次のtokenは Number(x)
-        let rs2 = self.check_number_token()?;
+        let rs2 = self.read_number_token()?;
 
         // 次のtokenは Comma
-        self.check_token_kind(Comma)?;
+        self.read_token_kind(Comma)?;
 
         // 次のtokenは Number(x)
-        let imm = self.check_number_token()?;
+        let imm = self.read_number_token()?;
 
         // 次のtokenは LParen
-        self.check_token_kind(LParen)?;
+        self.read_token_kind(LParen)?;
 
         // 次のtokenは Number(x)
-        let rs1 = self.check_number_token()?;
+        let rs1 = self.read_number_token()?;
 
         // 次のtokenは RParen
-        self.check_token_kind(RParen)?;
+        self.read_token_kind(RParen)?;
 
         // 命令列の最後は改行文字
-        self.check_token_kind(NewLine)?;
+        self.read_token_kind(NewLine)?;
 
         Ok(Asm {
             kind: AsmKind::SW { imm, rs2, rs1 },
@@ -156,22 +176,22 @@ impl<'a> Parser<'a> {
         self.next_token();
 
         // 次の token はNumber(x)
-        let rd = self.check_number_token()?;
+        let rd = self.read_number_token()?;
 
         // 次の token は Comma
-        self.check_token_kind(Comma)?;
+        self.read_token_kind(Comma)?;
 
         // 次の token は Number(x)
-        let rs1 = self.check_number_token()?;
+        let rs1 = self.read_number_token()?;
 
         // 次の token は Comma
-        self.check_token_kind(Comma)?;
+        self.read_token_kind(Comma)?;
 
         // 次の token は Number(x)
-        let imm = self.check_number_token()?;
+        let imm = self.read_number_token()?;
 
         // 命令列の最後は改行文字
-        self.check_token_kind(NewLine)?;
+        self.read_token_kind(NewLine)?;
 
         Ok(Asm {
             kind: AsmKind::ADDI { imm, rs1, rd },
@@ -184,22 +204,22 @@ impl<'a> Parser<'a> {
         self.next_token();
 
         // 次の token は Number(x)
-        let rd = self.check_number_token()?;
+        let rd = self.read_number_token()?;
 
         // 次の token は Comma
-        self.check_token_kind(Comma)?;
+        self.read_token_kind(Comma)?;
 
         // 次の token は Number(x)
-        let rs1 = self.check_number_token()?;
+        let rs1 = self.read_number_token()?;
 
         // 次の token は Comma
-        self.check_token_kind(Comma)?;
+        self.read_token_kind(Comma)?;
 
         // 次の token は Number(x)
-        let rs2 = self.check_number_token()?;
+        let rs2 = self.read_number_token()?;
 
         // 命令列の最後は改行文字
-        self.check_token_kind(NewLine)?;
+        self.read_token_kind(NewLine)?;
 
         Ok(Asm {
             kind: AsmKind::ADD { rs2, rs1, rd },
@@ -211,22 +231,22 @@ impl<'a> Parser<'a> {
         self.next_token();
 
         // 次の token は Number(x)
-        let rd = self.check_number_token()?;
+        let rd = self.read_number_token()?;
 
         // 次の token は Comma
-        self.check_token_kind(Comma)?;
+        self.read_token_kind(Comma)?;
 
         // 次の token は Number(x)
-        let rs1 = self.check_number_token()?;
+        let rs1 = self.read_number_token()?;
 
         // 次の token は Comma
-        self.check_token_kind(Comma)?;
+        self.read_token_kind(Comma)?;
 
         // 次の token は Number(x)
-        let rs2 = self.check_number_token()?;
+        let rs2 = self.read_number_token()?;
 
         // 命令列の最後は改行文字
-        self.check_token_kind(NewLine)?;
+        self.read_token_kind(NewLine)?;
 
         Ok(Asm {
             kind: AsmKind::SUB { rs2, rs1, rd },
@@ -238,22 +258,22 @@ impl<'a> Parser<'a> {
         self.next_token();
 
         // 次の token は Number(x)
-        let rd = self.check_number_token()?;
+        let rd = self.read_number_token()?;
 
         // 次の token は Comma
-        self.check_token_kind(Comma)?;
+        self.read_token_kind(Comma)?;
 
         // 次の token は Number(x)
-        let rs1 = self.check_number_token()?;
+        let rs1 = self.read_number_token()?;
 
         // 次の token は Comma
-        self.check_token_kind(Comma)?;
+        self.read_token_kind(Comma)?;
 
         // 次の token は Number(x)
-        let rs2 = self.check_number_token()?;
+        let rs2 = self.read_number_token()?;
 
         // 命令列の最後は改行文字
-        self.check_token_kind(NewLine)?;
+        self.read_token_kind(NewLine)?;
 
         Ok(Asm {
             kind: AsmKind::AND { rs2, rs1, rd },
@@ -265,22 +285,22 @@ impl<'a> Parser<'a> {
         self.next_token();
 
         // 次の token は Number(x)
-        let rd = self.check_number_token()?;
+        let rd = self.read_number_token()?;
 
         // 次の token は Comma
-        self.check_token_kind(Comma)?;
+        self.read_token_kind(Comma)?;
 
         // 次の token は Number(x)
-        let rs1 = self.check_number_token()?;
+        let rs1 = self.read_number_token()?;
 
         // 次の token は Comma
-        self.check_token_kind(Comma)?;
+        self.read_token_kind(Comma)?;
 
         // 次の token は Number(x)
-        let rs2 = self.check_number_token()?;
+        let rs2 = self.read_number_token()?;
 
         // 命令列の最後は改行文字
-        self.check_token_kind(NewLine)?;
+        self.read_token_kind(NewLine)?;
 
         Ok(Asm {
             kind: AsmKind::OR { rs2, rs1, rd },
@@ -292,22 +312,22 @@ impl<'a> Parser<'a> {
         self.next_token();
 
         // 次の token は Number(x)
-        let rd = self.check_number_token()?;
+        let rd = self.read_number_token()?;
 
         // 次の token は Comma
-        self.check_token_kind(Comma)?;
+        self.read_token_kind(Comma)?;
 
         // 次の token は Number(x)
-        let rs1 = self.check_number_token()?;
+        let rs1 = self.read_number_token()?;
 
         // 次の token は Comma
-        self.check_token_kind(Comma)?;
+        self.read_token_kind(Comma)?;
 
         // 次の token は Number(x)
-        let rs2 = self.check_number_token()?;
+        let rs2 = self.read_number_token()?;
 
         // 命令列の最後は改行文字
-        self.check_token_kind(NewLine)?;
+        self.read_token_kind(NewLine)?;
 
         Ok(Asm {
             kind: AsmKind::XOR { rs2, rs1, rd },
@@ -319,22 +339,22 @@ impl<'a> Parser<'a> {
         self.next_token();
 
         // 次の token は Number(x)
-        let rd = self.check_number_token()?;
+        let rd = self.read_number_token()?;
 
         // 次の token は Comma
-        self.check_token_kind(Comma)?;
+        self.read_token_kind(Comma)?;
 
         // 次の token は Number(x)
-        let rs1 = self.check_number_token()?;
+        let rs1 = self.read_number_token()?;
 
         // 次の token は Comma
-        self.check_token_kind(Comma)?;
+        self.read_token_kind(Comma)?;
 
         // 次の token は Number(x)
-        let rs2 = self.check_number_token()?;
+        let rs2 = self.read_number_token()?;
 
         // 命令列の最後は改行文字
-        self.check_token_kind(NewLine)?;
+        self.read_token_kind(NewLine)?;
 
         Ok(Asm {
             kind: AsmKind::SLT { rs2, rs1, rd },
@@ -346,22 +366,22 @@ impl<'a> Parser<'a> {
         self.next_token();
 
         // 次の token は Number(x)
-        let rd = self.check_number_token()?;
+        let rd = self.read_number_token()?;
 
         // 次の token は Comma
-        self.check_token_kind(Comma)?;
+        self.read_token_kind(Comma)?;
 
         // 次の token は Number(x)
-        let rs1 = self.check_number_token()?;
+        let rs1 = self.read_number_token()?;
 
         // 次の token は Comma
-        self.check_token_kind(Comma)?;
+        self.read_token_kind(Comma)?;
 
         // 次の token は Number(x)
-        let rs2 = self.check_number_token()?;
+        let rs2 = self.read_number_token()?;
 
         // 命令列の最後は改行文字
-        self.check_token_kind(NewLine)?;
+        self.read_token_kind(NewLine)?;
 
         Ok(Asm {
             kind: AsmKind::SLTU { rs2, rs1, rd },
@@ -373,22 +393,22 @@ impl<'a> Parser<'a> {
         self.next_token();
 
         // 次の token は Number(x)
-        let rd = self.check_number_token()?;
+        let rd = self.read_number_token()?;
 
         // 次の token は Comma
-        self.check_token_kind(Comma)?;
+        self.read_token_kind(Comma)?;
 
         // 次の token は Number(x)
-        let rs1 = self.check_number_token()?;
+        let rs1 = self.read_number_token()?;
 
         // 次の token は Comma
-        self.check_token_kind(Comma)?;
+        self.read_token_kind(Comma)?;
 
         // 次の token は Number(x)
-        let imm = self.check_number_token()?;
+        let imm = self.read_number_token()?;
 
         // 命令列の最後は改行文字
-        self.check_token_kind(NewLine)?;
+        self.read_token_kind(NewLine)?;
 
         Ok(Asm {
             kind: AsmKind::SLTI { imm, rs1, rd },
@@ -400,22 +420,22 @@ impl<'a> Parser<'a> {
         self.next_token();
 
         // 次の token は Number(x)
-        let rd = self.check_number_token()?;
+        let rd = self.read_number_token()?;
 
         // 次の token は Comma
-        self.check_token_kind(Comma)?;
+        self.read_token_kind(Comma)?;
 
         // 次の token は Number(x)
-        let rs1 = self.check_number_token()?;
+        let rs1 = self.read_number_token()?;
 
         // 次の token は Comma
-        self.check_token_kind(Comma)?;
+        self.read_token_kind(Comma)?;
 
         // 次の token は Number(x)
-        let imm = self.check_number_token()?;
+        let imm = self.read_number_token()?;
 
         // 命令列の最後は改行文字
-        self.check_token_kind(NewLine)?;
+        self.read_token_kind(NewLine)?;
 
         Ok(Asm {
             kind: AsmKind::SLTIU { imm, rs1, rd },
@@ -427,22 +447,22 @@ impl<'a> Parser<'a> {
         self.next_token();
 
         // 次の token は Number(x)
-        let rd = self.check_number_token()?;
+        let rd = self.read_number_token()?;
 
         // 次の token は Comma
-        self.check_token_kind(Comma)?;
+        self.read_token_kind(Comma)?;
 
         // 次の token は Number(x)
-        let rs1 = self.check_number_token()?;
+        let rs1 = self.read_number_token()?;
 
         // 次の token は Comma
-        self.check_token_kind(Comma)?;
+        self.read_token_kind(Comma)?;
 
         // 次の token は Number(x)
-        let rs2 = self.check_number_token()?;
+        let rs2 = self.read_number_token()?;
 
         // 命令列の最後は改行文字
-        self.check_token_kind(NewLine)?;
+        self.read_token_kind(NewLine)?;
 
         Ok(Asm {
             kind: AsmKind::SLL { rs2, rs1, rd },
@@ -454,22 +474,22 @@ impl<'a> Parser<'a> {
         self.next_token();
 
         // 次の token は Number(x)
-        let rd = self.check_number_token()?;
+        let rd = self.read_number_token()?;
 
         // 次の token は Comma
-        self.check_token_kind(Comma)?;
+        self.read_token_kind(Comma)?;
 
         // 次の token は Number(x)
-        let rs1 = self.check_number_token()?;
+        let rs1 = self.read_number_token()?;
 
         // 次の token は Comma
-        self.check_token_kind(Comma)?;
+        self.read_token_kind(Comma)?;
 
         // 次の token は Number(x)
-        let rs2 = self.check_number_token()?;
+        let rs2 = self.read_number_token()?;
 
         // 命令列の最後は改行文字
-        self.check_token_kind(NewLine)?;
+        self.read_token_kind(NewLine)?;
 
         Ok(Asm {
             kind: AsmKind::SRL { rs2, rs1, rd },
@@ -481,22 +501,22 @@ impl<'a> Parser<'a> {
         self.next_token();
 
         // 次の token は Number(x)
-        let rd = self.check_number_token()?;
+        let rd = self.read_number_token()?;
 
         // 次の token は Comma
-        self.check_token_kind(Comma)?;
+        self.read_token_kind(Comma)?;
 
         // 次の token は Number(x)
-        let rs1 = self.check_number_token()?;
+        let rs1 = self.read_number_token()?;
 
         // 次の token は Comma
-        self.check_token_kind(Comma)?;
+        self.read_token_kind(Comma)?;
 
         // 次の token は Number(x)
-        let rs2 = self.check_number_token()?;
+        let rs2 = self.read_number_token()?;
 
         // 命令列の最後は改行文字
-        self.check_token_kind(NewLine)?;
+        self.read_token_kind(NewLine)?;
 
         Ok(Asm {
             kind: AsmKind::SRA { rs2, rs1, rd },
@@ -508,22 +528,22 @@ impl<'a> Parser<'a> {
         self.next_token();
 
         // 次の token は Number(x)
-        let rd = self.check_number_token()?;
+        let rd = self.read_number_token()?;
 
         // 次の token は Comma
-        self.check_token_kind(Comma)?;
+        self.read_token_kind(Comma)?;
 
         // 次の token は Number(x)
-        let rs1 = self.check_number_token()?;
+        let rs1 = self.read_number_token()?;
 
         // 次の token は Comma
-        self.check_token_kind(Comma)?;
+        self.read_token_kind(Comma)?;
 
         // 次の token は Number(x)
-        let imm = self.check_number_token()?;
+        let imm = self.read_number_token()?;
 
         // 命令列の最後は改行文字
-        self.check_token_kind(NewLine)?;
+        self.read_token_kind(NewLine)?;
 
         Ok(Asm {
             kind: AsmKind::SLLI { imm, rs1, rd },
@@ -535,22 +555,22 @@ impl<'a> Parser<'a> {
         self.next_token();
 
         // 次の token は Number(x)
-        let rd = self.check_number_token()?;
+        let rd = self.read_number_token()?;
 
         // 次の token は Comma
-        self.check_token_kind(Comma)?;
+        self.read_token_kind(Comma)?;
 
         // 次の token は Number(x)
-        let rs1 = self.check_number_token()?;
+        let rs1 = self.read_number_token()?;
 
         // 次の token は Comma
-        self.check_token_kind(Comma)?;
+        self.read_token_kind(Comma)?;
 
         // 次の token は Number(x)
-        let imm = self.check_number_token()?;
+        let imm = self.read_number_token()?;
 
         // 命令列の最後は改行文字
-        self.check_token_kind(NewLine)?;
+        self.read_token_kind(NewLine)?;
 
         Ok(Asm {
             kind: AsmKind::SRLI { imm, rs1, rd },
@@ -562,25 +582,217 @@ impl<'a> Parser<'a> {
         self.next_token();
 
         // 次の token は Number(x)
-        let rd = self.check_number_token()?;
+        let rd = self.read_number_token()?;
 
         // 次の token は Comma
-        self.check_token_kind(Comma)?;
+        self.read_token_kind(Comma)?;
 
         // 次の token は Number(x)
-        let rs1 = self.check_number_token()?;
+        let rs1 = self.read_number_token()?;
 
         // 次の token は Comma
-        self.check_token_kind(Comma)?;
+        self.read_token_kind(Comma)?;
 
         // 次の token は Number(x)
-        let imm = self.check_number_token()?;
+        let imm = self.read_number_token()?;
 
         // 命令列の最後は改行文字
-        self.check_token_kind(NewLine)?;
+        self.read_token_kind(NewLine)?;
 
         Ok(Asm {
             kind: AsmKind::SRAI { imm, rs1, rd },
+        })
+    }
+
+    fn parse_b_beq(&mut self) -> Result<Asm, String> {
+        // 先頭は SLL だとわかっているので、次の token に進める
+        self.next_token();
+
+        // 次の token は Number(x)
+        let rd = self.read_number_token()?;
+
+        // 次の token は Comma
+        self.read_token_kind(Comma)?;
+
+        // 次の token は Number(x)
+        let rs1 = self.read_number_token()?;
+
+        // 次の token は Comma
+        self.read_token_kind(Comma)?;
+
+        // 次の token は Number(x)またはSymbol(s)
+        let (imm, label) = self.read_number_or_symbol_token()?;
+
+        // 命令列の最後は改行文字
+        self.read_token_kind(NewLine)?;
+
+        Ok(Asm {
+            kind: AsmKind::BEQ {
+                imm,
+                rs1,
+                rd,
+                label,
+            },
+        })
+    }
+
+    fn parse_b_bne(&mut self) -> Result<Asm, String> {
+        // 先頭は SLL だとわかっているので、次の token に進める
+        self.next_token();
+
+        // 次の token は Number(x)
+        let rd = self.read_number_token()?;
+
+        // 次の token は Comma
+        self.read_token_kind(Comma)?;
+
+        // 次の token は Number(x)
+        let rs1 = self.read_number_token()?;
+
+        // 次の token は Comma
+        self.read_token_kind(Comma)?;
+
+        // 次の token は Number(x)またはSymbol(s)
+        let (imm, label) = self.read_number_or_symbol_token()?;
+
+        // 命令列の最後は改行文字
+        self.read_token_kind(NewLine)?;
+
+        Ok(Asm {
+            kind: AsmKind::BNE {
+                imm,
+                rs1,
+                rd,
+                label,
+            },
+        })
+    }
+
+    fn parse_b_blt(&mut self) -> Result<Asm, String> {
+        // 先頭は SLL だとわかっているので、次の token に進める
+        self.next_token();
+
+        // 次の token は Number(x)
+        let rd = self.read_number_token()?;
+
+        // 次の token は Comma
+        self.read_token_kind(Comma)?;
+
+        // 次の token は Number(x)
+        let rs1 = self.read_number_token()?;
+
+        // 次の token は Comma
+        self.read_token_kind(Comma)?;
+
+        // 次の token は Number(x)またはSymbol(s)
+        let (imm, label) = self.read_number_or_symbol_token()?;
+
+        // 命令列の最後は改行文字
+        self.read_token_kind(NewLine)?;
+
+        Ok(Asm {
+            kind: AsmKind::BLT {
+                imm,
+                rs1,
+                rd,
+                label,
+            },
+        })
+    }
+
+    fn parse_b_bge(&mut self) -> Result<Asm, String> {
+        // 先頭は SLL だとわかっているので、次の token に進める
+        self.next_token();
+
+        // 次の token は Number(x)
+        let rd = self.read_number_token()?;
+
+        // 次の token は Comma
+        self.read_token_kind(Comma)?;
+
+        // 次の token は Number(x)
+        let rs1 = self.read_number_token()?;
+
+        // 次の token は Comma
+        self.read_token_kind(Comma)?;
+
+        // 次の token は Number(x)またはSymbol(s)
+        let (imm, label) = self.read_number_or_symbol_token()?;
+
+        // 命令列の最後は改行文字
+        self.read_token_kind(NewLine)?;
+
+        Ok(Asm {
+            kind: AsmKind::BGE {
+                imm,
+                rs1,
+                rd,
+                label,
+            },
+        })
+    }
+
+    fn parse_b_bltu(&mut self) -> Result<Asm, String> {
+        // 先頭は SLL だとわかっているので、次の token に進める
+        self.next_token();
+
+        // 次の token は Number(x)
+        let rd = self.read_number_token()?;
+
+        // 次の token は Comma
+        self.read_token_kind(Comma)?;
+
+        // 次の token は Number(x)
+        let rs1 = self.read_number_token()?;
+
+        // 次の token は Comma
+        self.read_token_kind(Comma)?;
+
+        // 次の token は Number(x)またはSymbol(s)
+        let (imm, label) = self.read_number_or_symbol_token()?;
+
+        // 命令列の最後は改行文字
+        self.read_token_kind(NewLine)?;
+
+        Ok(Asm {
+            kind: AsmKind::BLTU {
+                imm,
+                rs1,
+                rd,
+                label,
+            },
+        })
+    }
+
+    fn parse_b_bgeu(&mut self) -> Result<Asm, String> {
+        // 先頭は SLL だとわかっているので、次の token に進める
+        self.next_token();
+
+        // 次の token は Number(x)
+        let rd = self.read_number_token()?;
+
+        // 次の token は Comma
+        self.read_token_kind(Comma)?;
+
+        // 次の token は Number(x)
+        let rs1 = self.read_number_token()?;
+
+        // 次の token は Comma
+        self.read_token_kind(Comma)?;
+
+        // 次の token は Number(x)またはSymbol(s)
+        let (imm, label) = self.read_number_or_symbol_token()?;
+
+        // 命令列の最後は改行文字
+        self.read_token_kind(NewLine)?;
+
+        Ok(Asm {
+            kind: AsmKind::BGEU {
+                imm,
+                rs1,
+                rd,
+                label,
+            },
         })
     }
 }
@@ -829,6 +1041,90 @@ mod parser_tests {
             imm: -1,
             rs1: 9,
             rd: 5,
+        };
+        assert_eq!(asm_kind, expect);
+    }
+    #[test]
+    fn test_parser_b_beq() {
+        let s: &str = "beq 20, 12, 11\n";
+        let mut l = Lexer::new(s);
+        let mut p = Parser::new(&mut l);
+        let asm_kind = p.parse().unwrap().kind;
+        let expect = AsmKind::BEQ {
+            imm: Some(11),
+            rs1: 12,
+            rd: 20,
+            label: None,
+        };
+        assert_eq!(asm_kind, expect);
+    }
+    #[test]
+    fn test_parser_b_bne() {
+        let s: &str = "bne 20, 12, A1\n";
+        let mut l = Lexer::new(s);
+        let mut p = Parser::new(&mut l);
+        let asm_kind = p.parse().unwrap().kind;
+        let expect = AsmKind::BNE {
+            imm: None,
+            rs1: 12,
+            rd: 20,
+            label: Some("A1".to_string()),
+        };
+        assert_eq!(asm_kind, expect);
+    }
+    #[test]
+    fn test_parser_b_blt() {
+        let s: &str = "blt 0, 1, B1\n";
+        let mut l = Lexer::new(s);
+        let mut p = Parser::new(&mut l);
+        let asm_kind = p.parse().unwrap().kind;
+        let expect = AsmKind::BLT {
+            imm: None,
+            rs1: 1,
+            rd: 0,
+            label: Some("B1".to_string()),
+        };
+        assert_eq!(asm_kind, expect);
+    }
+    #[test]
+    fn test_parser_b_bge() {
+        let s: &str = "bge 17, 16, VVV1\n";
+        let mut l = Lexer::new(s);
+        let mut p = Parser::new(&mut l);
+        let asm_kind = p.parse().unwrap().kind;
+        let expect = AsmKind::BGE {
+            imm: None,
+            rs1: 16,
+            rd: 17,
+            label: Some("VVV1".to_string()),
+        };
+        assert_eq!(asm_kind, expect);
+    }
+    #[test]
+    fn test_parser_b_bltu() {
+        let s: &str = "bltu 7, 6, loop1\n";
+        let mut l = Lexer::new(s);
+        let mut p = Parser::new(&mut l);
+        let asm_kind = p.parse().unwrap().kind;
+        let expect = AsmKind::BLTU {
+            imm: None,
+            rs1: 6,
+            rd: 7,
+            label: Some("loop1".to_string()),
+        };
+        assert_eq!(asm_kind, expect);
+    }
+    #[test]
+    fn test_parser_b_bgeu() {
+        let s: &str = "bgeu 23, 4, loop2\n";
+        let mut l = Lexer::new(s);
+        let mut p = Parser::new(&mut l);
+        let asm_kind = p.parse().unwrap().kind;
+        let expect = AsmKind::BGEU {
+            imm: None,
+            rs1: 4,
+            rd: 23,
+            label: Some("loop2".to_string()),
         };
         assert_eq!(asm_kind, expect);
     }

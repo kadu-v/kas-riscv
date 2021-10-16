@@ -96,7 +96,7 @@ impl<'a> Lexer<'a> {
     // Identifierを読み取るメソッド
     fn read_identifier(&mut self) -> &[u8] {
         let pos = self.pos;
-        while self.is_letter() {
+        while self.is_letter() || self.is_digit() {
             self.read_char();
         }
 
@@ -131,7 +131,7 @@ impl<'a> Lexer<'a> {
 
     // 文字を判定するメソッド
     fn is_letter(&self) -> bool {
-        (b'a' <= self.ch && self.ch <= b'z') || (b'A' <= self.ch && self.ch <= b'B')
+        (b'a' <= self.ch && self.ch <= b'z') || (b'A' <= self.ch && self.ch <= b'Z')
     }
 
     // 数字を判定するメソッド
@@ -517,6 +517,96 @@ mod lexer_tests {
         assert_eq!(l.next_token().kind, TokenKind::Comma);
 
         assert_eq!(l.next_token().kind, TokenKind::Number(11));
+        assert_eq!(l.next_token().kind, TokenKind::NewLine);
+        assert_eq!(l.next_token().kind, TokenKind::EOF);
+    }
+
+    #[test]
+    fn test_lexer_b_beq() {
+        let s = "beq 20, 1, label1\n";
+        let mut l = Lexer::new(s);
+        assert_eq!(l.next_token().kind, TokenKind::BEQ);
+        assert_eq!(l.next_token().kind, TokenKind::Number(20));
+        assert_eq!(l.next_token().kind, TokenKind::Comma);
+        assert_eq!(l.next_token().kind, TokenKind::Number(1));
+        assert_eq!(l.next_token().kind, TokenKind::Comma);
+
+        assert_eq!(l.next_token().kind, TokenKind::Symbol("label1".to_string()));
+        assert_eq!(l.next_token().kind, TokenKind::NewLine);
+        assert_eq!(l.next_token().kind, TokenKind::EOF);
+    }
+
+    #[test]
+    fn test_lexer_b_bne() {
+        let s = "bne 0, 1, A1\n";
+        let mut l = Lexer::new(s);
+        assert_eq!(l.next_token().kind, TokenKind::BNE);
+        assert_eq!(l.next_token().kind, TokenKind::Number(0));
+        assert_eq!(l.next_token().kind, TokenKind::Comma);
+        assert_eq!(l.next_token().kind, TokenKind::Number(1));
+        assert_eq!(l.next_token().kind, TokenKind::Comma);
+
+        assert_eq!(l.next_token().kind, TokenKind::Symbol("A1".to_string()));
+        assert_eq!(l.next_token().kind, TokenKind::NewLine);
+        assert_eq!(l.next_token().kind, TokenKind::EOF);
+    }
+
+    #[test]
+    fn test_lexer_b_blt() {
+        let s = "blt 10, 2, B1\n";
+        let mut l = Lexer::new(s);
+        assert_eq!(l.next_token().kind, TokenKind::BLT);
+        assert_eq!(l.next_token().kind, TokenKind::Number(10));
+        assert_eq!(l.next_token().kind, TokenKind::Comma);
+        assert_eq!(l.next_token().kind, TokenKind::Number(2));
+        assert_eq!(l.next_token().kind, TokenKind::Comma);
+
+        assert_eq!(l.next_token().kind, TokenKind::Symbol("B1".to_string()));
+        assert_eq!(l.next_token().kind, TokenKind::NewLine);
+        assert_eq!(l.next_token().kind, TokenKind::EOF);
+    }
+
+    #[test]
+    fn test_lexer_b_bge() {
+        let s = "bge 17, 16, VVV1\n";
+        let mut l = Lexer::new(s);
+        assert_eq!(l.next_token().kind, TokenKind::BGE);
+        assert_eq!(l.next_token().kind, TokenKind::Number(17));
+        assert_eq!(l.next_token().kind, TokenKind::Comma);
+        assert_eq!(l.next_token().kind, TokenKind::Number(16));
+        assert_eq!(l.next_token().kind, TokenKind::Comma);
+
+        assert_eq!(l.next_token().kind, TokenKind::Symbol("VVV1".to_string()));
+        assert_eq!(l.next_token().kind, TokenKind::NewLine);
+        assert_eq!(l.next_token().kind, TokenKind::EOF);
+    }
+
+    #[test]
+    fn test_lexer_b_bltu() {
+        let s = "bltu 7, 6, loop1\n";
+        let mut l = Lexer::new(s);
+        assert_eq!(l.next_token().kind, TokenKind::BLTU);
+        assert_eq!(l.next_token().kind, TokenKind::Number(7));
+        assert_eq!(l.next_token().kind, TokenKind::Comma);
+        assert_eq!(l.next_token().kind, TokenKind::Number(6));
+        assert_eq!(l.next_token().kind, TokenKind::Comma);
+
+        assert_eq!(l.next_token().kind, TokenKind::Symbol("loop1".to_string()));
+        assert_eq!(l.next_token().kind, TokenKind::NewLine);
+        assert_eq!(l.next_token().kind, TokenKind::EOF);
+    }
+
+    #[test]
+    fn test_lexer_b_bgeu() {
+        let s = "bgeu 23, 4, loop2\n";
+        let mut l = Lexer::new(s);
+        assert_eq!(l.next_token().kind, TokenKind::BGEU);
+        assert_eq!(l.next_token().kind, TokenKind::Number(23));
+        assert_eq!(l.next_token().kind, TokenKind::Comma);
+        assert_eq!(l.next_token().kind, TokenKind::Number(4));
+        assert_eq!(l.next_token().kind, TokenKind::Comma);
+
+        assert_eq!(l.next_token().kind, TokenKind::Symbol("loop2".to_string()));
         assert_eq!(l.next_token().kind, TokenKind::NewLine);
         assert_eq!(l.next_token().kind, TokenKind::EOF);
     }
