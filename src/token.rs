@@ -41,6 +41,7 @@ static KEYWORDS: Lazy<HashMap<&str, TokenKind>> = Lazy::new(|| {
 pub enum TokenKind {
     NewLine,        // '\n', '\r
     Comma,          // ","
+    Colon,          // ":"
     LParen,         // "("
     RParen,         // ")"
     Symbol(String), // "lw"

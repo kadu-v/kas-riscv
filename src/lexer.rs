@@ -39,6 +39,7 @@ impl<'a> Lexer<'a> {
             b',' => tok.kind = TokenKind::Comma,
             b'(' => tok.kind = TokenKind::LParen,
             b')' => tok.kind = TokenKind::RParen,
+            b':' => tok.kind = TokenKind::Colon,
             Self::EOF_CONST => tok.kind = TokenKind::EOF,
             _ => {
                 if self.is_digit() || self.is_minus_lit() {
@@ -608,6 +609,15 @@ mod lexer_tests {
 
         assert_eq!(l.next_token().kind, TokenKind::Symbol("loop2".to_string()));
         assert_eq!(l.next_token().kind, TokenKind::NewLine);
+        assert_eq!(l.next_token().kind, TokenKind::EOF);
+    }
+
+    #[test]
+    fn test_lexer_label() {
+        let s = "loop:";
+        let mut l = Lexer::new(s);
+        assert_eq!(l.next_token().kind, TokenKind::Symbol("loop".to_string()));
+        assert_eq!(l.next_token().kind, TokenKind::Colon);
         assert_eq!(l.next_token().kind, TokenKind::EOF);
     }
 }

@@ -34,6 +34,7 @@ impl<'a> Parser<'a> {
     // 命令列のパース
     pub fn parse(&mut self) -> Result<Asm, String> {
         match &self.cur_tok.kind {
+            Symbol(_) => self.parse_label(),
             // 命令列の末尾を表す
             EOF => Ok(Asm {
                 kind: AsmKind::EOASM,
@@ -100,12 +101,34 @@ impl<'a> Parser<'a> {
             Number(x) => Ok((Some(x), None)),
             Symbol(s) => Ok((None, Some(s))),
             _ => Err(format!(
-                "Parser::read_number_orsymbol_token: expected number or symbol, but got {:?}",
+                "Parser::read_number_or_symbol_token: expected number or symbol, but got {:?}",
                 self.cur_tok.kind
             )),
         };
         self.next_token();
         asm_kind
+    }
+
+    fn read_symbol_token(&mut self) -> Result<String, String> {
+        match self.cur_tok.kind.clone() {
+            Symbol(s) => Ok(s),
+            _ => Err(format!(
+                "Parser::read_symbol_token: expected symbol, but got {:?}",
+                self.cur_tok.kind
+            )),
+        }
+    }
+
+    fn parse_label(&mut self) -> Result<Asm, String> {
+        let l = self.read_symbol_token()?;
+
+        self.next_token();
+
+        self.read_token_kind(Colon)?;
+
+        Ok(Asm {
+            kind: AsmKind::LABEL { l },
+        })
     }
 
     // lw 命令をparseするメソッド
@@ -1125,6 +1148,18 @@ mod parser_tests {
             rs1: 4,
             rd: 23,
             label: Some("loop2".to_string()),
+        };
+        assert_eq!(asm_kind, expect);
+    }
+
+    #[test]
+    fn test_parser_label() {
+        let s: &str = "loop:\n";
+        let mut l = Lexer::new(s);
+        let mut p = Parser::new(&mut l);
+        let asm_kind = p.parse().unwrap().kind;
+        let expect = AsmKind::LABEL {
+            l: "loop".to_string(),
         };
         assert_eq!(asm_kind, expect);
     }

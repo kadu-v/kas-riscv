@@ -3,6 +3,9 @@ use std::isize;
 #[derive(Debug, PartialEq, Eq)]
 pub enum AsmKind {
     EOASM,
+    LABEL {
+        l: String,
+    },
     LW {
         imm: isize,
         rs1: isize,
