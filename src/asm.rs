@@ -1,6 +1,6 @@
 use std::isize;
 
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum AsmKind {
     EOASM,
     LABEL {
@@ -134,7 +134,7 @@ pub enum AsmKind {
     },
 }
 
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Asm {
     pub kind: AsmKind,
 }

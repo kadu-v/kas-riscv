@@ -1,6 +1,7 @@
 use kas_riscv::assembler::Assembler;
 // use kas_riscv::assembler::{assemble_bin, assemble_hex};
 use kas_riscv::code_gen::gen_hex;
+use kas_riscv::label_table::make_label_table;
 use kas_riscv::lexer::Lexer;
 use kas_riscv::parser::Parser;
 
@@ -39,7 +40,8 @@ fn main() {
     };
     let mut l = Lexer::new(&input);
     let mut p = Parser::new(&mut l);
-    let mut a = Assembler::new(&mut p);
+    let (a, lt) = make_label_table(&mut p).unwrap();
+    let mut a = Assembler::new(a, lt);
     let output = match a.assemble_all() {
         Ok(src) => src,
         Err(e) => {
