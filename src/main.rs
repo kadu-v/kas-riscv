@@ -17,7 +17,7 @@ use kas_riscv::lexer::*;
 fn main() {
     let args = env::args().collect::<Vec<String>>();
     if args.len() < 2 {
-        eprintln!("please input file !");
+        eprintln!("please input file!");
         process::exit(1);
     }
 

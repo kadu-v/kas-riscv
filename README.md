@@ -40,4 +40,4 @@ $ cd kas-riscv
 $ cargo run ./sources/add.kas
 ```
 
-`add.hex` file isi generated in `source` directry
+`add.hex` file is generated in `source` directry
