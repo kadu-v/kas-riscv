@@ -1,5 +1,5 @@
-use crate::instructions::InstType::*;
-use crate::instructions::*;
+use crate::inst::InstType::*;
+use crate::inst::*;
 
 // 命令形式に従って、バイナリを生成する
 pub fn gen_bin(inst: &Inst) -> String {

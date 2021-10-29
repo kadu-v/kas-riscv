@@ -1,24 +1,42 @@
 use std::collections::HashMap;
-use std::iter::Inspect;
 
 use crate::asm::{Asm, AsmKind::*};
-use crate::code_gen::{gen_bin, gen_hex};
-use crate::instructions::{Inst, InstType::*};
-use crate::parser::*;
+use crate::code_gen::gen_bin;
+use crate::inst::{Inst, InstType::*};
+use crate::label_table;
 
-pub struct Assembler<'a> {
-    p: &'a mut Parser<'a>,
+pub struct Assembler {
+    a: Vec<Asm>,
+    pos: usize,
+    lt: HashMap<String, isize>,
 }
 
-impl<'a> Assembler<'a> {
+impl Assembler {
     // Assemblerのコンストラクター
-    pub fn new(p: &'a mut Parser<'a>) -> Self {
-        Self { p }
+    pub fn new(a: Vec<Asm>, lt: HashMap<String, isize>) -> Self {
+        Self {
+            a: a,
+            pos: 0,
+            lt: lt,
+        }
+    }
+
+    pub fn next_asm(&mut self) -> Result<Asm, String> {
+        if self.pos >= self.a.len() {
+            return Err(format!(
+                "Assembler::next_asm: index out of range, self.a.len(): {}, get: {}",
+                self.pos,
+                self.a.len()
+            ));
+        }
+        let p = self.pos;
+        self.pos += 1;
+        Ok(self.a[p].clone())
     }
 
     //
     pub fn assemble(&mut self) -> Result<Inst, String> {
-        let asm = self.p.parse()?;
+        let asm = self.next_asm()?;
         let inst_type = match asm.kind {
             LW { imm, rs1, rd } => I {
                 imm: imm,
@@ -119,6 +137,51 @@ impl<'a> Assembler<'a> {
                 rd: rd,
                 opcode: 0b0010011,
             },
+            SLL { rs2, rs1, rd } => R {
+                funct7: 0b0000000,
+                rs2: rs2,
+                rs1: rs1,
+                funct3: 0b001,
+                rd: rd,
+                opcode: 0b0110011,
+            },
+            SRL { rs2, rs1, rd } => R {
+                funct7: 0b0000000,
+                rs2: rs2,
+                rs1: rs1,
+                funct3: 0b101,
+                rd: rd,
+                opcode: 0b0110011,
+            },
+            SRA { rs2, rs1, rd } => R {
+                funct7: 0b0100000,
+                rs2: rs2,
+                rs1: rs1,
+                funct3: 0b101,
+                rd: rd,
+                opcode: 0b0110011,
+            },
+            SLLI { imm, rs1, rd } => I {
+                imm: imm,
+                rs1: rs1,
+                funct3: 001,
+                rd: rd,
+                opcode: 0b0010011,
+            },
+            SRLI { imm, rs1, rd } => I {
+                imm: imm,
+                rs1: rs1,
+                funct3: 0b101,
+                rd: rd,
+                opcode: 0b0010011,
+            },
+            SRAI { imm, rs1, rd } => I {
+                imm: 0b010000000000 + imm,
+                rs1: rs1,
+                funct3: 0b101,
+                rd: rd,
+                opcode: 0b0010011,
+            },
             EOASM => EOINST,
             x => return Err(format!("Assembler::assemble: {:?} is not implemnted", x)),
         };
@@ -191,7 +254,8 @@ impl<'a> Assembler<'a> {
 mod assemble_tests {
     use crate::asm::{Asm, AsmKind};
     use crate::assembler::Assembler;
-    use crate::instructions::{Inst, InstType::*};
+    use crate::inst::{Inst, InstType::*};
+    use crate::label_table::make_label_table;
     use crate::lexer::*;
     use crate::parser::*;
 
@@ -200,7 +264,8 @@ mod assemble_tests {
         let s: &str = "lw 6, 16(10)\n";
         let mut l = Lexer::new(s);
         let mut p = Parser::new(&mut l);
-        let mut a = Assembler::new(&mut p);
+        let (a, lt) = make_label_table(&mut p).unwrap();
+        let mut a = Assembler::new(a, lt);
         let inst_ty = a.assemble().unwrap().ty;
         let expect = I {
             imm: 16,
@@ -217,7 +282,8 @@ mod assemble_tests {
         let s: &str = "sw 6, 2357(0)\n";
         let mut l = Lexer::new(s);
         let mut p = Parser::new(&mut l);
-        let mut a = Assembler::new(&mut p);
+        let (a, lt) = make_label_table(&mut p).unwrap();
+        let mut a = Assembler::new(a, lt);
         let inst_ty = a.assemble().unwrap().ty;
         let expect = S {
             imm_1: 73,
@@ -235,7 +301,8 @@ mod assemble_tests {
         let s: &str = "addi 6, 16, 10\n";
         let mut l = Lexer::new(s);
         let mut p = Parser::new(&mut l);
-        let mut a = Assembler::new(&mut p);
+        let (a, lt) = make_label_table(&mut p).unwrap();
+        let mut a = Assembler::new(a, lt);
         let inst_ty = a.assemble().unwrap().ty;
         let expect = I {
             imm: 10,
@@ -252,7 +319,8 @@ mod assemble_tests {
         let s: &str = "add 0, 10, 5\n";
         let mut l = Lexer::new(s);
         let mut p = Parser::new(&mut l);
-        let mut a = Assembler::new(&mut p);
+        let (a, lt) = make_label_table(&mut p).unwrap();
+        let mut a = Assembler::new(a, lt);
         let inst_ty = a.assemble().unwrap().ty;
         let expect = R {
             funct7: 0b0000000,
@@ -270,7 +338,8 @@ mod assemble_tests {
         let s: &str = "sub 1, 11, 6\n";
         let mut l = Lexer::new(s);
         let mut p = Parser::new(&mut l);
-        let mut a = Assembler::new(&mut p);
+        let (a, lt) = make_label_table(&mut p).unwrap();
+        let mut a = Assembler::new(a, lt);
         let inst_ty = a.assemble().unwrap().ty;
         let expect = R {
             funct7: 0b0100000,
@@ -289,7 +358,8 @@ mod assemble_tests {
         let s: &str = "and 31, 10, 1\n";
         let mut l = Lexer::new(s);
         let mut p = Parser::new(&mut l);
-        let mut a = Assembler::new(&mut p);
+        let (a, lt) = make_label_table(&mut p).unwrap();
+        let mut a = Assembler::new(a, lt);
         let inst_ty = a.assemble().unwrap().ty;
         let expect = R {
             funct7: 0b0000000,
@@ -308,7 +378,8 @@ mod assemble_tests {
         let s: &str = "or 0, 100, 521\n";
         let mut l = Lexer::new(s);
         let mut p = Parser::new(&mut l);
-        let mut a = Assembler::new(&mut p);
+        let (a, lt) = make_label_table(&mut p).unwrap();
+        let mut a = Assembler::new(a, lt);
         let inst_ty = a.assemble().unwrap().ty;
         let expect = R {
             funct7: 0b0000000,
@@ -327,7 +398,8 @@ mod assemble_tests {
         let s: &str = "xor 24, 111, 666\n";
         let mut l = Lexer::new(s);
         let mut p = Parser::new(&mut l);
-        let mut a = Assembler::new(&mut p);
+        let (a, lt) = make_label_table(&mut p).unwrap();
+        let mut a = Assembler::new(a, lt);
         let inst_ty = a.assemble().unwrap().ty;
         let expect = R {
             funct7: 0b0000000,
@@ -346,7 +418,8 @@ mod assemble_tests {
         let s: &str = "slt 24, 11, 6\n";
         let mut l = Lexer::new(s);
         let mut p = Parser::new(&mut l);
-        let mut a = Assembler::new(&mut p);
+        let (a, lt) = make_label_table(&mut p).unwrap();
+        let mut a = Assembler::new(a, lt);
         let inst_ty = a.assemble().unwrap().ty;
         let expect = R {
             funct7: 0b0000000,
@@ -365,7 +438,8 @@ mod assemble_tests {
         let s: &str = "sltu 24, 3, 9\n";
         let mut l = Lexer::new(s);
         let mut p = Parser::new(&mut l);
-        let mut a = Assembler::new(&mut p);
+        let (a, lt) = make_label_table(&mut p).unwrap();
+        let mut a = Assembler::new(a, lt);
         let inst_ty = a.assemble().unwrap().ty;
         let expect = R {
             funct7: 0b0000000,
@@ -384,7 +458,8 @@ mod assemble_tests {
         let s: &str = "slti 7, 2, -10\n";
         let mut l = Lexer::new(s);
         let mut p = Parser::new(&mut l);
-        let mut a = Assembler::new(&mut p);
+        let (a, lt) = make_label_table(&mut p).unwrap();
+        let mut a = Assembler::new(a, lt);
         let inst_ty = a.assemble().unwrap().ty;
         let expect = I {
             imm: -10,
@@ -402,12 +477,124 @@ mod assemble_tests {
         let s: &str = "sltiu 5, 6, -11\n";
         let mut l = Lexer::new(s);
         let mut p = Parser::new(&mut l);
-        let mut a = Assembler::new(&mut p);
+        let (a, lt) = make_label_table(&mut p).unwrap();
+        let mut a = Assembler::new(a, lt);
         let inst_ty = a.assemble().unwrap().ty;
         let expect = I {
             imm: -11,
             rs1: 6,
             funct3: 0b011,
+            rd: 5,
+            opcode: 0b0010011,
+        };
+
+        assert_eq!(inst_ty, expect);
+    }
+
+    #[test]
+    fn test_assembler_r_sll() {
+        let s: &str = "sll 5, 6, 11\n";
+        let mut l = Lexer::new(s);
+        let mut p = Parser::new(&mut l);
+        let (a, lt) = make_label_table(&mut p).unwrap();
+        let mut a = Assembler::new(a, lt);
+        let inst_ty = a.assemble().unwrap().ty;
+        let expect = R {
+            funct7: 0b0000000,
+            rs2: 11,
+            rs1: 6,
+            funct3: 0b001,
+            rd: 5,
+            opcode: 0b0110011,
+        };
+        assert_eq!(inst_ty, expect);
+    }
+    #[test]
+    fn test_assembler_r_srl() {
+        let s: &str = "srl 3, 0, 1\n";
+        let mut l = Lexer::new(s);
+        let mut p = Parser::new(&mut l);
+        let (a, lt) = make_label_table(&mut p).unwrap();
+        let mut a = Assembler::new(a, lt);
+        let inst_ty = a.assemble().unwrap().ty;
+        let expect = R {
+            funct7: 0b0000000,
+            rs2: 1,
+            rs1: 0,
+            funct3: 0b101,
+            rd: 3,
+            opcode: 0b0110011,
+        };
+
+        assert_eq!(inst_ty, expect);
+    }
+    #[test]
+    fn test_assembler_r_sra() {
+        let s: &str = "sra 2, 19, 15\n";
+        let mut l = Lexer::new(s);
+        let mut p = Parser::new(&mut l);
+        let (a, lt) = make_label_table(&mut p).unwrap();
+        let mut a = Assembler::new(a, lt);
+        let inst_ty = a.assemble().unwrap().ty;
+        let expect = R {
+            funct7: 0b0100000,
+            rs2: 15,
+            rs1: 19,
+            funct3: 0b101,
+            rd: 2,
+            opcode: 0b0110011,
+        };
+
+        assert_eq!(inst_ty, expect);
+    }
+    #[test]
+    fn test_assembler_r_slli() {
+        let s: &str = "slli 5, 6, 31\n";
+        let mut l = Lexer::new(s);
+        let mut p = Parser::new(&mut l);
+        let (a, lt) = make_label_table(&mut p).unwrap();
+        let mut a = Assembler::new(a, lt);
+        let inst_ty = a.assemble().unwrap().ty;
+        let expect = I {
+            imm: 31,
+            rs1: 6,
+            funct3: 0b001,
+            rd: 5,
+            opcode: 0b0010011,
+        };
+
+        assert_eq!(inst_ty, expect);
+    }
+    #[test]
+    fn test_assembler_r_srli() {
+        let s: &str = "srli 5, 6, 10\n";
+        let mut l = Lexer::new(s);
+        let mut p = Parser::new(&mut l);
+        let (a, lt) = make_label_table(&mut p).unwrap();
+        let mut a = Assembler::new(a, lt);
+        let inst_ty = a.assemble().unwrap().ty;
+        let expect = I {
+            imm: 10,
+            rs1: 6,
+            funct3: 0b101,
+            rd: 5,
+            opcode: 0b0010011,
+        };
+
+        assert_eq!(inst_ty, expect);
+    }
+    #[test]
+    fn test_assembler_r_slai() {
+        let s: &str = "srai 5, 6, 11\n";
+        let mut l = Lexer::new(s);
+        let mut p = Parser::new(&mut l);
+        let (a, lt) = make_label_table(&mut p).unwrap();
+        let mut a = Assembler::new(a, lt);
+        let inst_ty = a.assemble().unwrap().ty;
+        let expect = I {
+            imm: 0b010000000000 + 11,
+            rs1: 6,
+            funct3: 0b101,
             rd: 5,
             opcode: 0b0010011,
         };
