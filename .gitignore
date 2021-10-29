@@ -12,3 +12,4 @@ Cargo.lock
 
 sources/*.hex
 .rustfmt.toml
+.vscode/

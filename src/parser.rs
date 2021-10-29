@@ -632,13 +632,13 @@ impl<'a> Parser<'a> {
         self.next_token();
 
         // 次の token は Number(x)
-        let rd = self.read_number_token()?;
+        let rs1 = self.read_number_token()?;
 
         // 次の token は Comma
         self.read_token_kind(Comma)?;
 
         // 次の token は Number(x)
-        let rs1 = self.read_number_token()?;
+        let rs2 = self.read_number_token()?;
 
         // 次の token は Comma
         self.read_token_kind(Comma)?;
@@ -652,8 +652,8 @@ impl<'a> Parser<'a> {
         Ok(Asm {
             kind: AsmKind::BEQ {
                 imm,
+                rs2,
                 rs1,
-                rd,
                 label,
             },
         })
@@ -664,13 +664,13 @@ impl<'a> Parser<'a> {
         self.next_token();
 
         // 次の token は Number(x)
-        let rd = self.read_number_token()?;
+        let rs1 = self.read_number_token()?;
 
         // 次の token は Comma
         self.read_token_kind(Comma)?;
 
         // 次の token は Number(x)
-        let rs1 = self.read_number_token()?;
+        let rs2 = self.read_number_token()?;
 
         // 次の token は Comma
         self.read_token_kind(Comma)?;
@@ -684,8 +684,8 @@ impl<'a> Parser<'a> {
         Ok(Asm {
             kind: AsmKind::BNE {
                 imm,
+                rs2,
                 rs1,
-                rd,
                 label,
             },
         })
@@ -696,13 +696,13 @@ impl<'a> Parser<'a> {
         self.next_token();
 
         // 次の token は Number(x)
-        let rd = self.read_number_token()?;
+        let rs1 = self.read_number_token()?;
 
         // 次の token は Comma
         self.read_token_kind(Comma)?;
 
         // 次の token は Number(x)
-        let rs1 = self.read_number_token()?;
+        let rs2 = self.read_number_token()?;
 
         // 次の token は Comma
         self.read_token_kind(Comma)?;
@@ -716,8 +716,8 @@ impl<'a> Parser<'a> {
         Ok(Asm {
             kind: AsmKind::BLT {
                 imm,
+                rs2,
                 rs1,
-                rd,
                 label,
             },
         })
@@ -728,13 +728,13 @@ impl<'a> Parser<'a> {
         self.next_token();
 
         // 次の token は Number(x)
-        let rd = self.read_number_token()?;
+        let rs1 = self.read_number_token()?;
 
         // 次の token は Comma
         self.read_token_kind(Comma)?;
 
         // 次の token は Number(x)
-        let rs1 = self.read_number_token()?;
+        let rs2 = self.read_number_token()?;
 
         // 次の token は Comma
         self.read_token_kind(Comma)?;
@@ -748,8 +748,8 @@ impl<'a> Parser<'a> {
         Ok(Asm {
             kind: AsmKind::BGE {
                 imm,
+                rs2,
                 rs1,
-                rd,
                 label,
             },
         })
@@ -760,13 +760,13 @@ impl<'a> Parser<'a> {
         self.next_token();
 
         // 次の token は Number(x)
-        let rd = self.read_number_token()?;
+        let rs1 = self.read_number_token()?;
 
         // 次の token は Comma
         self.read_token_kind(Comma)?;
 
         // 次の token は Number(x)
-        let rs1 = self.read_number_token()?;
+        let rs2 = self.read_number_token()?;
 
         // 次の token は Comma
         self.read_token_kind(Comma)?;
@@ -780,8 +780,8 @@ impl<'a> Parser<'a> {
         Ok(Asm {
             kind: AsmKind::BLTU {
                 imm,
+                rs2,
                 rs1,
-                rd,
                 label,
             },
         })
@@ -792,13 +792,13 @@ impl<'a> Parser<'a> {
         self.next_token();
 
         // 次の token は Number(x)
-        let rd = self.read_number_token()?;
+        let rs1 = self.read_number_token()?;
 
         // 次の token は Comma
         self.read_token_kind(Comma)?;
 
         // 次の token は Number(x)
-        let rs1 = self.read_number_token()?;
+        let rs2 = self.read_number_token()?;
 
         // 次の token は Comma
         self.read_token_kind(Comma)?;
@@ -812,8 +812,8 @@ impl<'a> Parser<'a> {
         Ok(Asm {
             kind: AsmKind::BGEU {
                 imm,
+                rs2,
                 rs1,
-                rd,
                 label,
             },
         })
@@ -1075,8 +1075,8 @@ mod parser_tests {
         let asm_kind = p.parse().unwrap().kind;
         let expect = AsmKind::BEQ {
             imm: Some(11),
-            rs1: 12,
-            rd: 20,
+            rs2: 12,
+            rs1: 20,
             label: None,
         };
         assert_eq!(asm_kind, expect);
@@ -1089,8 +1089,8 @@ mod parser_tests {
         let asm_kind = p.parse().unwrap().kind;
         let expect = AsmKind::BNE {
             imm: None,
-            rs1: 12,
-            rd: 20,
+            rs2: 12,
+            rs1: 20,
             label: Some("A1".to_string()),
         };
         assert_eq!(asm_kind, expect);
@@ -1103,8 +1103,8 @@ mod parser_tests {
         let asm_kind = p.parse().unwrap().kind;
         let expect = AsmKind::BLT {
             imm: None,
-            rs1: 1,
-            rd: 0,
+            rs2: 1,
+            rs1: 0,
             label: Some("B1".to_string()),
         };
         assert_eq!(asm_kind, expect);
@@ -1117,8 +1117,8 @@ mod parser_tests {
         let asm_kind = p.parse().unwrap().kind;
         let expect = AsmKind::BGE {
             imm: None,
-            rs1: 16,
-            rd: 17,
+            rs2: 16,
+            rs1: 17,
             label: Some("VVV1".to_string()),
         };
         assert_eq!(asm_kind, expect);
@@ -1131,8 +1131,8 @@ mod parser_tests {
         let asm_kind = p.parse().unwrap().kind;
         let expect = AsmKind::BLTU {
             imm: None,
-            rs1: 6,
-            rd: 7,
+            rs2: 6,
+            rs1: 7,
             label: Some("loop1".to_string()),
         };
         assert_eq!(asm_kind, expect);
@@ -1145,16 +1145,28 @@ mod parser_tests {
         let asm_kind = p.parse().unwrap().kind;
         let expect = AsmKind::BGEU {
             imm: None,
-            rs1: 4,
-            rd: 23,
+            rs2: 4,
+            rs1: 23,
             label: Some("loop2".to_string()),
         };
         assert_eq!(asm_kind, expect);
     }
 
     #[test]
-    fn test_parser_label() {
+    fn test_parser_label1() {
         let s: &str = "loop:\n";
+        let mut l = Lexer::new(s);
+        let mut p = Parser::new(&mut l);
+        let asm_kind = p.parse().unwrap().kind;
+        let expect = AsmKind::LABEL {
+            l: "loop".to_string(),
+        };
+        assert_eq!(asm_kind, expect);
+    }
+
+    #[test]
+    fn test_parser_label2() {
+        let s: &str = "loop:";
         let mut l = Lexer::new(s);
         let mut p = Parser::new(&mut l);
         let asm_kind = p.parse().unwrap().kind;

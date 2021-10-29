@@ -36,6 +36,17 @@ pub enum InstType {
         rd: isize,
         opcode: isize,
     },
+    // B形式の命令
+    // | 31 ----- 25 | 24 --- 20 | 19 --- 15 | 14 --- 12 | 11 --- 7 | 6 --- 0 |
+    //       imm          rs2         rs1       funct3        rd       opcode
+    B {
+        imm_1: isize,
+        rs2: isize,
+        rs1: isize,
+        funct3: isize,
+        imm_2: isize,
+        opcode: isize,
+    },
 }
 
 impl Display for InstType {
@@ -72,6 +83,16 @@ impl Display for InstType {
                 opcode,
             } => {
                 write!(f, "R {{ funct7: {:#09b}, rs2: {:#07b}, rs1: {:#07b}, funct3: {:#05b}, rd: {:#07b}, opcode: {:#09b} }}", funct7, rs2, rs1, funct3, rd, opcode)
+            }
+            Self::B {
+                imm_1,
+                rs2,
+                rs1,
+                funct3,
+                imm_2,
+                opcode,
+            } => {
+                write!(f, "S {{ imm_1: {:#09b}, rs2: {:#07b}, rs1: {:#07b}, funct3: {:#05b}, imm_2: {:#07b}, opcode: {:#09b} }}", imm_1, rs2, rs1, funct3, imm_2, opcode)
             }
         }
     }

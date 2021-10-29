@@ -30,7 +30,7 @@ This is a minimal assembler for risc-v.
                              v  ----------------------| code_gen.rs |
                              |                        +-------------+
                   +----------+----------+
-                  | Binary code (riscv) |
+                  | Binary code (risc-v) |
                   +---------------------+
 ```
 ## How to install/use

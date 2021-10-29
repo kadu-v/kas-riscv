@@ -1,6 +1,9 @@
 use std::collections::HashMap;
 
-use crate::asm::{Asm, AsmKind::*};
+use crate::asm::{
+    Asm,
+    AsmKind::{self, *},
+};
 use crate::code_gen::gen_bin;
 use crate::inst::{Inst, InstType::*};
 use crate::label_table;
@@ -21,6 +24,11 @@ impl Assembler {
         }
     }
 
+    pub fn get_pc(&self, label: &String) -> Option<&isize> {
+        self.lt.get(label)
+    }
+
+    // 次のアセンブラを取り出す関数
     pub fn next_asm(&mut self) -> Result<Asm, String> {
         if self.pos >= self.a.len() {
             return Err(format!(
@@ -34,7 +42,7 @@ impl Assembler {
         Ok(self.a[p].clone())
     }
 
-    //
+    // 次の１命令をアセンブルする関数
     pub fn assemble(&mut self) -> Result<Inst, String> {
         let asm = self.next_asm()?;
         let inst_type = match asm.kind {
@@ -182,12 +190,43 @@ impl Assembler {
                 rd: rd,
                 opcode: 0b0010011,
             },
+            // BEQ {
+            //     imm,
+            //     rs2,
+            //     rs1,
+            //     label,
+            // } => {
+            //     assemble_b(asm.kind)?;
+            // }
             EOASM => EOINST,
             x => return Err(format!("Assembler::assemble: {:?} is not implemnted", x)),
         };
 
         Ok(Inst { ty: inst_type })
     }
+
+    // fn assemble_b(asm_kind: AsmKind) -> Result<Inst, String> {
+    //     let inst = match asm_kind {
+    //         BEQ {
+    //             imm,
+    //             rs2,
+    //             rs1,
+    //             label,
+    //         } => {
+    //             if let Some(pc) = imm {
+    //                 B {
+    //                     imm_1: pc,
+    //                     rs2: rs2,
+    //                     rs1: rs1,
+    //                     funct3: 0b000,
+    //                     imm_2: (pc & 0b11110) |
+    //                 }
+    //             }
+    //         }
+    //         _ => return Err(format!("{:?} is not B form", asm_kind)),
+    //     };
+    //     Ok(inst)
+    // }
 
     // 全ての文字列をアセンブラに変換
     #[allow(irrefutable_let_patterns)]
@@ -586,6 +625,24 @@ mod assemble_tests {
     #[test]
     fn test_assembler_r_slai() {
         let s: &str = "srai 5, 6, 11\n";
+        let mut l = Lexer::new(s);
+        let mut p = Parser::new(&mut l);
+        let (a, lt) = make_label_table(&mut p).unwrap();
+        let mut a = Assembler::new(a, lt);
+        let inst_ty = a.assemble().unwrap().ty;
+        let expect = I {
+            imm: 0b010000000000 + 11,
+            rs1: 6,
+            funct3: 0b101,
+            rd: 5,
+            opcode: 0b0010011,
+        };
+
+        assert_eq!(inst_ty, expect);
+    }
+    #[test]
+    fn test_assembler_b_beq() {
+        let s: &str = "beq 5, 6, 10\n";
         let mut l = Lexer::new(s);
         let mut p = Parser::new(&mut l);
         let (a, lt) = make_label_table(&mut p).unwrap();

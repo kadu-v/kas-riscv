@@ -1,7 +1,6 @@
 use std::collections::HashMap;
 
 use crate::asm::{Asm, AsmKind::*};
-use crate::label_table;
 use crate::parser::Parser;
 
 pub fn make_label_table<'a>(
